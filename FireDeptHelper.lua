@@ -1574,7 +1574,7 @@ function imgui.OnDrawFrame()
 									os.remove(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt")
 								end
 								table.remove(binder.list, binder.select_bind) 
-								local f = io.open(dirml.."/MedicFDHelperalHelper/bindSetting.fd", "w")
+								local f = io.open(dirml.."/FDHelper/bindSetting.fd", "w")
 								f:write(encodeJson(binder.list))
 								f:flush()
 								f:close()
