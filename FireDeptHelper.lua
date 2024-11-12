@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.0.0")
+script_version("1.0.1")
 script_properties("work-in-pause")
 setver = 1
  
@@ -465,6 +465,11 @@ arep = false
 needSave = false
 needSaveColor = imgui.ImColor(250, 66, 66, 102):GetVec4()
 
+local postCP = nil
+local postCPcoords = {}
+postCPcoords.x = nil
+postCPcoords.y = nil
+postCPcoords.z = nil
 
 local BlockKeys = {{vkeys.VK_T}, {vkeys.VK_F6}, {vkeys.VK_F8}, {vkeys.VK_RETURN}, {vkeys.VK_OEM_3}, {vkeys.VK_LWIN}, {vkeys.VK_RWIN}}
 
@@ -888,12 +893,12 @@ function main()
 			end
 		else
 			print("{F54A4A}Ошибка. Файл настроек команд повреждён.")
-			print("{82E28C}Применины стандартные настройки")
+			print("{82E28C}Применены стандартные настройки")
 			os.remove(dirml.."/FDHelper/cmdSetting.fd")
 		end
 	else
 		print("{F54A4A}Ошибка. Файл настроек команд не найден.")
-		print("{82E28C}Применины стандартные настройки")
+		print("{82E28C}Применены стандартные настройки")
 	end
 	
 	--register binder 
@@ -915,11 +920,11 @@ function main()
 		else
 			os.remove(dirml.."/FDHelper/bindSetting.fd")
 			print("{F54A4A}Ошибка. Файл настроек биндера повреждён.")
-			print("{82E28C}Применины стандартные настройки")
+			print("{82E28C}Применены стандартные настройки")
 		end
 	else 
 		print("{F54A4A}Ошибка. Файл настроек биндера не найден.")
-		print("{82E28C}Применины стандартные настройки")
+		print("{82E28C}Применены стандартные настройки")
 	end
 	
 	lockPlayerControl(false)
@@ -957,7 +962,17 @@ function main()
 		end
   while true do
 	wait(0)
-
+		if postCP ~= nil then
+			local x, y, z = getCharCoordinates(PLAYER_PED)
+			if getDistanceBetweenCoords3d(x,y,z,postCPcoords.x,postCPcoords.y,postCPcoords.z) < 3 then
+				deleteCheckpoint(postCP)
+				postCP = nil
+				postCPcoords.x = nil
+				postCPcoords.y = nil 
+				postCPcoords.z = nil				
+				addOneOffSound(0, 0, 0, 1058)
+			end
+		end
 		resTarg, pedTar = getCharPlayerIsTargeting(PLAYER_HANDLE)
 		if resTarg then
 			_, targID = sampGetPlayerIdByCharHandle(pedTar)
@@ -3240,6 +3255,13 @@ function funCMD.post()
 	end
 	local bool, post, coord = postGet()
 	if not bool then
+		if postCP ~= nil then
+			deleteCheckpoint(postCP)
+			postCP = nil
+			postCPcoords.x = nil
+			postCPcoords.y = nil 
+			postCPcoords.z = nil
+		end
 		sampShowDialog(2001, ">{FFB300}Посты", "                             {55BBFF}Выберите пост\n"..table.concat(post, "\n"), "{69FF5C}Выбрать", "{FF5C5C}Отмена", 5)
 		sampSetDialogClientside(false)
 	elseif bool then
@@ -3576,14 +3598,22 @@ function hook.onSendSpawn()
 	_, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
 	myNick = sampGetPlayerNickname(myid)
 end
-
 function hook.onSendDialogResponse(id, but, list)
 	if sampGetDialogCaption() == ">{FFB300}Посты" then
 		if but == 1 then
 			local bool, post, coord = postGet()
-			placeWaypoint(coord[list+1].x, coord[list+1].y, 20)
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: На карте была выставлена метка места назначения.", 0xEE4848)
+			if postCP ~= nil then
+				deleteCheckpoint(postCP)
+				postCP = nil
+				postCPcoords.x = nil
+				postCPcoords.y = nil 
+				postCPcoords.z = nil
+			end
+			postCPcoords.x, postCPcoords.y, postCPcoords.z = coord[list+1].x,coord[list+1].y,coord[list+1].z
+			postCP = createCheckpoint(1, coord[list+1].x, coord[list+1].y, coord[list+1].z, nil, nil, nil, 2)
 			addOneOffSound(0, 0, 0, 1058)
+			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Была выставлена метка поста №"..list+1, 0xEE4848)
+			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Все посты находятся внутри пожарного департамента", 0xEE4848)
 		elseif but == 0 then
 		end
 	end
@@ -3727,37 +3757,37 @@ end
 function postGet(sel)
 	local postname = {"Пост №1","Пост №2","Пост №3","Пост №4","Пост №5"}
 	local coord = {{},{},{},{},{}}
-	coord[1].x, coord[1].y = -1295.85, -67.10
-	coord[2].x, coord[2].y = -1301.73, -74.81
-	coord[3].x, coord[3].y = -1304.16, -16.20
-	coord[4].x, coord[4].y = -1296.83, -50.10
-	coord[5].x, coord[5].y = -1283.59, -36.03
+	coord[1].x, coord[1].y, coord[1].z = -1295.85, -67.10, 18.28
+	coord[2].x, coord[2].y, coord[2].z = -1301.73, -74.81, 18.28
+	coord[3].x, coord[3].y, coord[3].z = -1304.16, -16.20, 14.14
+	coord[4].x, coord[4].y, coord[4].z = -1296.83, -50.10, 14.14
+	coord[5].x, coord[5].y, coord[5].z = -1283.59, -36.03, 14.14
 
 	if sel ~= nil and isCharInArea2d(PLAYER_PED, coord[sel].x-3, coord[sel].y-3, coord[sel].x+3, coord[sel].y+3,false) then
-		local coord = {}
+		local coords = {}
 		coords.x, coords.y = coord[sel].x, coord[sel].y
 		return true, postname, coords
 	end
 
 		if isCharInArea2d(PLAYER_PED, -1295.85-3, -67.10-3, -1295.85+3, -67.10+3,false) then
 			local coord = {}
-			coord.x, coord.y = -1295.85, -67.10
+			coord.x, coord.y, coord.z = -1295.85, -67.10, 18.28
 			return true, postname[1], coord
 		elseif isCharInArea2d(PLAYER_PED, -1301.73-3, -74.81-3, -1301.73+3, -74.81+3,false) then
 			local coord = {}
-			coord.x, coord.y = -1301.73, -74.81
+			coord.x, coord.y, coord.z = -1301.73, -74.81, 18.28
 			return true, postname[2], coord
 		elseif isCharInArea2d(PLAYER_PED, -1304.16-3, -16.20-3, -1304.16+3, -16.20+3,false) then
 			local coord = {}
-			coord.x, coord.y = -1304.16, -16.20
+			coord.x, coord.y, coord.z = -1304.16, -16.20, 14.14
 			return true, postname[3], coord
 		elseif isCharInArea2d(PLAYER_PED, -1296.83-3, -50.10-3, -1296.83+3, -50.10+3,false) then
 			local coord = {}
-			coord.x, coord.y = -1296.83, -50.10
+			coord.x, coord.y, coord.z = -1296.83, -50.10, 14.14
 			return true, postname[4], coord
 		elseif isCharInArea2d(PLAYER_PED, -1283.59-3, -36.03-3, -1283.59+3, -36.03+3,false) then
 			local coord = {}
-			coord.x, coord.y = -1283.59, -36.03
+			coord.x, coord.y, coord.z = -1283.59, -36.03, 14.14
 			return true, postname[5], coord
 		end
 	return false, postname, coord
