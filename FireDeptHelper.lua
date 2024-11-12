@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.0.1")
+script_version("1.1.0")
 script_properties("work-in-pause")
 setver = 1
  
@@ -1665,11 +1665,26 @@ function imgui.OnDrawFrame()
 					imgui.SetCursorPosX(280)
 					imgui.Text(u8"Кратко о фракции")
 					imgui.Spacing()
-					imgui.TextWrapped(u8"\tДобро пожаловать! Добро пожаловать в Пожарный департамент.\nСами вы его выбрали, или его выбрали за вас — это лучшая фракция из всех.\n\n\nПовышения до 5 ранга через /wbook. Выше 5го зависит от вашего лидера.")
+					imgui.TextWrapped(u8"\tДобро пожаловать в Пожарный департамент.\nСами вы его выбрали, или его выбрали за вас — это лучшая фракция из всех.\n\n\nПовышения до 5 ранга через /wbook. Выше 5го зависит от вашего лидера.")
 					imgui.Dummy(imgui.ImVec2(0, 10))
 					
+						imgui.Dummy(imgui.ImVec2(0, 80))
+						imgui.SetCursorPosX(20)
+						imgui.Text(fa.ICON_LINK)
+						imgui.SameLine()
+						imgui.TextColoredRGB("Актуальная версия - на {74BAF4}GitHub")
+							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
+							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") end
+							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
+							imgui.SameLine()
+							imgui.TextColoredRGB("{68E15D}(наведи)")
+					
 					imgui.Bullet()
-					imgui.TextColoredRGB("Разработчик - {FFB700}romanespit {FFFFFF}(основа {FFB700}MedicalHelper by Kevin Hatiko{FFFFFF})")
+					imgui.TextColoredRGB("Разработчик - {FFB700}romanespit")
+					imgui.Bullet()
+					imgui.TextColoredRGB("Основа {FFB700}MedicalHelper by Kevin Hatiko")	
+					imgui.Bullet()
+					imgui.TextColoredRGB("Фиксил MedicalHelper {FFB700}сырный [07]Alexandr_Morenzo")	
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
 						if imgui.Button(u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
