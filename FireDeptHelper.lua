@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.1.0")
+script_version("1.1.1")
 script_properties("work-in-pause")
 setver = 1
  
@@ -157,7 +157,6 @@ local sx, sy = getScreenResolution()
 local mainWin	= imgui.ImBool(false) -- Гл.окно
 local paramWin = imgui.ImBool(false) -- окно параметров
 local spurBig = imgui.ImBool(false) -- большое окно шпоры
-local sobWin = imgui.ImBool(false) -- окно собески
 local depWin = imgui.ImBool(false) -- окно департамента
 local mainEditWin = imgui.ImBool(false)
 local iconwin	= imgui.ImBool(false)
@@ -576,62 +575,55 @@ cmdBind = {
 		rb = false
 	},
 	[7] = {
-		cmd = "/sob",
-		key = {},
-		desc = "Меню собеседования с человеком",
-		rank = 5,
-		rb = false
-	},
-	[8] = {
 		cmd = "/+warn",
 		key = {},
 		desc = "Выдача выговора сотруднику",
 		rank = 8,
 		rb = false
 	},
-	[9] = {
+	[8] = {
 		cmd = "/-warn",
 		key = {},
 		desc = "Снять выговор сотруднику",
 		rank = 8,
 		rb = false
 	},
-	[10] = {
+	[9] = {
 		cmd = "/+mute",
 		key = {},
 		desc = "Выдать мут сотруднику",
 		rank = 8,
 		rb = false
 	},
-	[11] = {
+	[10] = {
 		cmd = "/-mute",
 		key = {},
 		desc = "Снять мут сотруднику",
 		rank = 8,
 		rb = false
 	},
-	[12] = {
+	[11] = {
 		cmd = "/gr",
 		key = {},
 		desc = "Изменить ранг (должность) сотруднику",
 		rank = 9,
 		rb = false
 	},
-	[13] = {
+	[12] = {
 		cmd = "/inv",
 		key = {},
 		desc = "Принять в организацию игрока",
 		rank = 9,
 		rb = false
 	},
-	[14] = {
+	[13] = {
 		cmd = "/unv",
 		key = {},
 		desc = "Уволить сотрудника из организации",
 		rank = 9,
 		rb = false
 	},
-	[15] = {
+	[14] = {
 		cmd = "/ts",
 		key = {},
 		desc = "Быстрый скриншот с автоматическим вводом /time",
@@ -946,7 +938,6 @@ function main()
 		sampRegisterChatCommand("+mute", funCMD.mute)
 		sampRegisterChatCommand("-mute", funCMD.umute)
 		sampRegisterChatCommand("mb", funCMD.memb)
-		sampRegisterChatCommand("sob", funCMD.sob)
 		sampRegisterChatCommand("dep", funCMD.dep)
 		sampRegisterChatCommand("post", funCMD.post)
 		sampRegisterChatCommand("ts", funCMD.time)
@@ -1007,7 +998,7 @@ function main()
 	if cb_hud.v then showInputHelp() end
 	if cb_hudTime.v and not isPauseMenuActive() then hudTimeF() end
 	--if hudPing and not isPauseMenuActive() then pingGraphic(sx/9*8-20, sy/4) end
-		imgui.Process = mainWin.v or iconwin.v or sobWin.v or depWin.v
+		imgui.Process = mainWin.v or iconwin.v or depWin.v
   end
 end
  
@@ -2072,265 +2063,6 @@ function imgui.OnDrawFrame()
 		imgui.End()
 	end
 	
-	if sobWin.v then
-		local sw, sh = getScreenResolution()
-		imgui.SetNextWindowSize(imgui.ImVec2(880, 380), imgui.Cond.FirstUseEver)
-		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(u8"Меню для проведения собеседования", sobWin, imgui.WindowFlags.NoResize);
-		--	imgui.SetWindowFontScale(1.1)
-			imgui.BeginGroup()
-				imgui.PushItemWidth(140)
-				imgui.InputText("##id", sobes.selID, imgui.InputTextFlags.CallbackCharFilter + imgui.InputTextFlags.EnterReturnsTrue + readID(), filter(1, "%d+"))
-				imgui.PopItemWidth()
-				if not imgui.IsItemActive() and sobes.selID.v == "" then
-					imgui.SameLine()
-					imgui.SetCursorPosX(13)
-					imgui.TextDisabled(u8"Укажите id игрока") 
-				end
-				imgui.SameLine()
-				imgui.SetCursorPosX(155)
-				if imgui.Button(u8"Начать", imgui.ImVec2(60, 20)) then
-					if sobes.selID.v ~= "" then
-						if #sobes.logChat == 0 then
-						sobes.num = sobes.num + 1
-						threadS = lua_thread.create(sobesRP, sobes.num);
-						table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Проверка документов...")
-						else
-						table.insert(sobes.logChat, "{E74E28}[Ошибка]{FFFFFF}: Проверка уже начала. Если хотите начать новую, нажмите на кнопку \"Остановить\" или \n\tдождитесь окончания проверки.")
-						end
-					else
-						sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Укажите id игрока для начала собеседования.", 0xEE4848)
-					end
-				end
-				imgui.BeginChild("pass player", imgui.ImVec2(210, 170), true)
-					imgui.SetCursorPosX(30)
-					imgui.Text(u8"Информация о игроке:")
-					imgui.Separator()
-					imgui.Bullet()
-					imgui.Text(u8"Имя:")
-						if sobes.player.name == "" then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							imgui.SameLine()
-							imgui.TextColoredRGB("{FFCD00}"..sobes.player.name)
-						end
-					imgui.Bullet()
-					imgui.Text(u8"Лет в штате:")
-						if sobes.player.let == 0 then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.let >= 3 then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.let.."/3")
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.let.."{17E11D}/3")
-							end
-						end
-					imgui.Bullet()
-					imgui.Text(u8"Законопослушность:")
-						if sobes.player.zak == 0 then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.zak >= 35 then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.zak.."/35")
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.zak.."{17E11D}/35")
-							end
-						end
-					imgui.Bullet()
-					imgui.Text(u8"Имеет работу:")
-						if sobes.player.work == "" then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.work == "Без работы" then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.work)
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.work)
-							end
-						end
-					imgui.Bullet()
-					imgui.Text(u8"Состоит в ЧС:")
-						if sobes.player.bl == "" then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.bl == "Не найден(а)" then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.bl)
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.bl)
-							end
-						end
-					imgui.Spacing()
-					imgui.Bullet()
-					imgui.Text(u8"Здоровье:")
-						if sobes.player.heal == "" then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.heal == "Здоров" then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.heal)
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.heal)
-							end
-						end
-					imgui.Bullet()
-					imgui.Text(u8"Наркозависимость:")
-						if sobes.player.narko == 0.1 then
-							imgui.SameLine()
-							imgui.TextColoredRGB("{F55534}нет")
-						else
-							if sobes.player.narko == 0 then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{17E11D}"..sobes.player.narko.."/0")
-							else
-								imgui.SameLine()
-								imgui.TextColoredRGB("{F55534}"..sobes.player.narko.."{17E11D}/0")
-							end
-						end
-				imgui.EndChild()
-				if imgui.Button(u8"Внеочередной вопрос", imgui.ImVec2(210, 30)) then imgui.OpenPopup("sobQN") end
-				imgui.Spacing() --if #sobes.logChat == 0 then
-					if sobes.nextQ then
-						if imgui.Button(u8"Дальше вопрос", imgui.ImVec2(210, 30)) then
-							sobes.num = sobes.num + 1
-							lua_thread.create(sobesRP, sobes.num); 
-						end
-					else
-						imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.Button(u8"Дальше вопрос", imgui.ImVec2(210, 30))
-						imgui.PopStyleColor(3)
-					end
-				imgui.Spacing()
-				if #sobes.logChat ~= 0 and sobes.selID.v ~= "" then
-					if imgui.Button(u8"Определить годность", imgui.ImVec2(210, 30)) then imgui.OpenPopup("sobEnter") end
-				else
-						imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.Button(u8"Определить годностьс", imgui.ImVec2(210, 30))
-						imgui.PopStyleColor(3)
-				end
-				imgui.Spacing()
-				if #sobes.logChat ~= 0 and sobes.selID.v ~= "" then 
-					if imgui.Button(u8"Остановить/Очистить", imgui.ImVec2(210, 30)) then
-						threadS:terminate()
-						sobes.input.v = ""
-						sobes.player = {name = "", let = 0, zak = 0, work = "", bl = "", heal = "", narko = 0.1}
-						sobes.selID.v = ""
-						sobes.logChat = {}
-						sobes.nextQ = false
-						sobes.num = 0
-					end
-				else
-						imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImColor(156, 156, 156, 200):GetVec4())
-						imgui.Button(u8"Остановить/Очистить", imgui.ImVec2(210, 30))
-						imgui.PopStyleColor(3)
-				end
-			imgui.EndGroup()
-			imgui.SameLine()
-			imgui.BeginChild("log chat", imgui.ImVec2(0, 0), true)
-				imgui.SetCursorPosX(270)
-				imgui.Text(u8"Локальный чат")
-					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Кликните ПКМ для очистки") end
-					if imgui.IsItemClicked(1) then sobes.logChat = {} end
-				imgui.SameLine()
-				imgui.SetCursorPosX(580)
-				if imgui.SmallButton(u8"Помощь") then imgui.OpenPopup("helpsob") end
-				imgui.PushStyleColor(imgui.Col.PopupBg, imgui.ImVec4(0.06, 0.06, 0.06, 0.94))
-					if imgui.BeginPopup("helpsob") then
-						imgui.Text(u8"\t\t\t\t\t\tНебольшая инструкция по пользованию.")
-						imgui.TextColoredRGB(helpsob)
-					imgui.EndPopup()
-					end
-				imgui.PopStyleColor(1)
-				imgui.BeginChild("log chat in", imgui.ImVec2(0, 280), true)
-					for i,v in ipairs(sobes.logChat) do
-						imgui.TextColoredRGB(v)
-					end
-					imgui.SetScrollY(imgui.GetScrollMaxY())
-				imgui.EndChild()
-				imgui.Spacing()
-				imgui.Text(u8"Вы:");
-				imgui.SameLine()
-				imgui.PushItemWidth(515)
-				imgui.InputText("##chat", sobes.input)
-				imgui.PopItemWidth()
-				imgui.SameLine()
-				if imgui.Button(u8"Отправить", imgui.ImVec2(85, 20)) then sampSendChat(u8:decode(sobes.input.v)); sobes.input.v = "" end
-			imgui.EndChild()
-				imgui.PushStyleColor(imgui.Col.PopupBg, imgui.ImVec4(0.06, 0.06, 0.06, 0.94)) 
-					if imgui.BeginPopup("sobEnter") then
-						if imgui.MenuItem(u8"Принять") then lua_thread.create(sobesRP, 4) end
-						if imgui.BeginMenu(u8"Отклонить") then
-							if imgui.MenuItem(u8"Опечатка в паспорте (Ник)") then lua_thread.create(sobesRP, 5) end
-							if imgui.MenuItem(u8"Мало лет проживания") then lua_thread.create(sobesRP, 6) end
-							if imgui.MenuItem(u8"Проблемы с законом") then lua_thread.create(sobesRP, 7) end
-							if imgui.MenuItem(u8"Имеет работу") then lua_thread.create(sobesRP, 8) end
-							if imgui.MenuItem(u8"Состоит в ЧС") then lua_thread.create(sobesRP, 9) end
-							if imgui.MenuItem(u8"Проблемы со здоровьем") then lua_thread.create(sobesRP, 10) end
-							if imgui.MenuItem(u8"Имеет наркозависимость") then lua_thread.create(sobesRP, 11) end
-						imgui.EndMenu()
-						end
-					imgui.EndPopup()
-					end
-					if imgui.BeginPopup("sobQN") then
-						if imgui.MenuItem(u8"Попросить документы") then 
-							sampSendChat("Предъявите пожалуйста Ваш пакет документов, а именно: паспорт и мед.карту.") 
-							table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Повторная просьба показать документы.")
-						end
-						if imgui.MenuItem(u8"Выбор организации") then 
-							sampSendChat("Почему Вы выбрали именно наш департамент для трудоустройства?") 
-							table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Почему Вы выбрали именно наш департамент для трудоустройства?")
-						end
-						if imgui.MenuItem(u8"Рассказать о себе") then 
-							sampSendChat("Расскажите, пожалуйста, немного о себе.") 
-							table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Расскажите, пожалуйста, немного о себе.")
-						end
-						if imgui.MenuItem(u8"Имеет ли Discord") then 
-							sampSendChat("Имеется ли у Вас спец.рация \"Discord\"?") 
-							table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Имеется ли у Вас спец.рация \"Discord\"?")
-						end
-						if imgui.BeginMenu(u8"Вопросы на психику:") then
-							if imgui.MenuItem(u8"МГ") then 
-								sampSendChat("Что может означать аббревиатура 'МГ'?")
-								table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Что может означать аббревиатура 'МГ'?")
-							end
-							if imgui.MenuItem(u8"ДМ") then 
-								sampSendChat("Что может означать аббревиатура 'ДМ'?") 
-								table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Что может означать аббревиатура 'ДМ'?")
-							end
-							if imgui.MenuItem(u8"ТК") then 
-								sampSendChat("Что может означать аббревиатура 'ТК'?") 
-								table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Что может означать аббревиатура 'ТК'?")
-							end
-							if imgui.MenuItem(u8"РП") then 
-								sampSendChat("Как Вы думаете, что может означать аббревиатура 'РП'?")
-								table.insert(sobes.logChat, "{FFC000}Вы: {FFFFFF}Вопрос: Как Вы думаете, что может означать аббревиатура 'РП'?.")								
-							end
-						imgui.EndMenu()
-						end
-					imgui.EndPopup()
-					end
-				imgui.PopStyleColor(1)
-		imgui.End()
-	end
 
 	if depWin.v then
 		local sw, sh = getScreenResolution()
@@ -2830,9 +2562,7 @@ function onHotKeyCMD(id, keys)
 					funCMD.post()				
 				elseif k == 6 then -- деп
 					depWin.v = not depWin.v
-				elseif k == 7 then -- соб
-					sobWin.v = not sobWin.v
-				elseif k == 8 then
+				elseif k == 7 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/+warn "..targID)
@@ -2840,7 +2570,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/+warn ")
 					end
-				elseif k == 9 then
+				elseif k == 8 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/-warn "..targID)
@@ -2848,7 +2578,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/-warn ")
 					end
-				elseif k == 10 then
+				elseif k == 9 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/+mute "..targID)
@@ -2856,7 +2586,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/+mute ")
 					end
-				elseif k == 11 then
+				elseif k == 10 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/-mute "..targID)
@@ -2864,7 +2594,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/-mute ")
 					end
-				elseif k == 12 then
+				elseif k == 11 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/gr "..targID)
@@ -2872,7 +2602,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/gr ")
 					end
-				elseif k == 13 then
+				elseif k == 12 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/inv "..targID)
@@ -2880,7 +2610,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/inv ")
 					end
-				elseif k == 14 then
+				elseif k == 13 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/unv "..targID)
@@ -2888,7 +2618,7 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputEnabled(true)
 						sampSetChatInputText("/unv ")
 					end
-				elseif k == 15 then
+				elseif k == 14 then
 					funCMD.time()
 				end
 				
@@ -3469,9 +3199,6 @@ function funCMD.rank(text)
 		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /gr [id игрока] [номер ранга].", 0xEE4848)
 		end
 end
-function funCMD.sob()
-	sobWin.v = not sobWin.v
-end
 function funCMD.dep()
 	if num_rank.v+1 < 5 then
 		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
@@ -3521,33 +3248,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return str
 		end
 	end
-	if sobes.selID.v ~= "" and sobes.player.name ~= "" then
-		
-		if mes:find(sobes.player.name.."%[%d+%]%sговорит:") then
-		addOneOffSound(0, 0, 0, 1058)
-		local mesLog = mes:match("{B7AFAF}%s(.+)")
-		print(mesLog)
-		local mesLog = stringN(mesLog, "B7AFAF")
-			table.insert(sobes.logChat, "{54A8F2}"..sobes.player.name.."{FFFFFF} говорит: {B7AFAF}"..mesLog)
-		end
-		
-		if mes:find(sobes.player.name.."%[%d+%]%s%(%(") then
-		local mesLog = mes:match("}(.+){")
-		local mesLog = stringN(mesLog, "B7AFAF")
-		table.insert(sobes.logChat, "{54A8F2}"..sobes.player.name.."{FFFFFF} говорит: {B7AFAF}(( "..mesLog.." ))")
-		end
-		if mes:find(sobes.player.name.."%[%d+%]%s[%X%w]+") and mesColor == -6684673 then
-			local mesLog = mes:match("%[%d+%]%s([%X%w]+)")
-			local mesLog = stringN(mesLog, "F35373")
-			table.insert(sobes.logChat, "{54A8F2}"..sobes.player.name.." {F35373}[/me]: "..mesLog)
-		end
-		if mes:find("%-%s%|%s%s"..sobes.player.name.."%[%d+%]") then
-			local mesLog = mes:match("([%X%w]+)%s%s%-%s%|%s%s"..sobes.player.name)
-			local mesLog = stringN(mesLog, "2679FF")
-			table.insert(sobes.logChat, "{54A8F2}"..sobes.player.name.." {2679FF}[/do]: "..mesLog)
-		end
-		
-	end
+	
 	if mes:find("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[[%X%a]+%].+%["..u8:decode(list_org[num_org.v+1]).."%]") then
 			local org = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[([%X%a]+)%].+%["..u8:decode(list_org[num_org.v+1]).."%]")
 		if mes:find("связь") and num_rank.v > 3 then -- rankFix()
@@ -3807,42 +3508,3 @@ function postGet(sel)
 		end
 	return false, postname, coord
 end
-
-helpsob = [[
-1. По началу работы требуется указать требуемый id игрока.
-После чего нажать на кнопку "Начать". Начнётся процесс проверки.
-Во время проверки не получится резко поменять игрока. Для этого
-можно воспользоваться кнопкой "Остановить/Очистить", которая
-сотрёт все текущие данные и можно будет прописать новый id.
-
-Все данные с документов заносятся автоматически. В случае показа
-чужих документов, они будут отклонены.
-2. По окончанию проверки документов, задаются несколько вопросов.
-Для продолжения действия нажимается кнопка "Дальше вопрос".
-Также можете самостоятельно задать дополнительный вопрос по
-нажатию на кнопку "Внеочередной вопрос".
-3. После автоматических вопросов приглашается игрок.
-Вы можете самостоятельно принять решение для приглашения или
-отклонения игрока по нажатию на кнопку "Определить годность".
-]]
-																								--    |
-otchotTx = [[
-		Для этого нужно открыть страницу форума {5CE9B5}forum.arizona-rp.com{FFFFFF}, после чего чуть ниже найти 
-		список игровых серверов, из которых нужно выбрать тот, на котором Вы сейчас находитесь. 
-		Потом откройте раздел {5CE9B5}'Государственные структуры'{FFFFFF}, далее раздел {5CE9B5}'Мин. Здравоохранения'{FFFFFF}. 
-		Перед Вами будет 3 раздела больниц, выбираете тот, в каком Вы больнице находитесь. 
-		И последнее, найдите тему похожая на {5CE9B5}'Отчёты младшего состава'{FFFFFF}. Тут Вам предстоит прочесть, 
-		как оформлять. После ознакомления скопируйте для удобства форму и в нижнее окно вставьте. 
-		Теперь Вам нужно рассортировать Ваши скриншоты по пунктам. например имеются скриншоты 
-		лечения людей и выдача мед.карт. Требуется сделать {F75647}раздельно{FFFFFF} лечения и выдача мед.карт,
-		а не отправлять кучей. Дальше выберите любой один ниже представленный список сайтов, 
-		куда будете заливать скриншоты.
-			Как перешли на сайт, нужно {F75647}загрузить туда скриншоты, не перемешивая по назначению. 
-		То есть, берёте скриншоты лечения, к примеру, и заливате на сайт. После загрузки получаете 
-		ссылку. Её требуется скопировать и вставить в форму отчёта. 
-			Например: {5CE9B5}Лечение - [ссылка]{FFFFFF}, и так далее. Как всё сделаете, отправляете отчёт. 
-			{F75647}																	Внимание!
-	Если по нажанию на кнопку, сообщение не отправляется, не спешите тыкать по много раз, 
-	возможно форум лагает. Подождите немного, если не отправляется, то скопируйте свой отчёт, 
-	перезагрузите страницу и вставьте. На этом всё!
-]]
