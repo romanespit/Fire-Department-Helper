@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.1.0")
+script_version("1.2.0")
 script_properties("work-in-pause")
 setver = 1
  
@@ -1643,7 +1643,7 @@ function imgui.OnDrawFrame()
 					imgui.TextWrapped(u8"\tДобро пожаловать в Пожарный департамент.\nСами вы его выбрали, или его выбрали за вас — это лучшая фракция из всех.\n\n\nПовышения до 5 ранга через /wbook. Выше 5го зависит от вашего лидера.")
 					imgui.Dummy(imgui.ImVec2(0, 10))
 					
-						imgui.Dummy(imgui.ImVec2(0, 80))
+						imgui.Dummy(imgui.ImVec2(0, 40))
 						imgui.SetCursorPosX(20)
 						imgui.Text(fa.ICON_LINK)
 						imgui.SameLine()
@@ -1667,9 +1667,10 @@ function imgui.OnDrawFrame()
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
-						if imgui.Button(fa.ICON_WRENCH..u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
+						if imgui.Button(fa.ICON_WRENCH..u8" Перезагрузить скрипт", imgui.ImVec2(180, 30)) then showCursor(false); scr:reload() end
 						if newversion ~= scr.version then
-							if imgui.Button(fa.ICON_FIRE..u8" Обновить до v"..newversion, imgui.ImVec2(160, 20)) then updateScript() end
+							imgui.Dummy(imgui.ImVec2(0, 20))
+							if imgui.Button(fa.ICON_FIRE..u8" Обновить до v"..newversion, imgui.ImVec2(180, 30)) then updateScript() end
 						end
 						
 						imgui.EndChild()
