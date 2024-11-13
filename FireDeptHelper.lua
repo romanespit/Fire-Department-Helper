@@ -2706,7 +2706,7 @@ function funCMD.post()
 			postCPcoords.y = nil 
 			postCPcoords.z = nil
 		end
-		sampShowDialog(2001, "Посты", "                             "..COLOR_MAIN.."Выберите пост\n"..table.concat(post, "\n"), "{69FF5C}Выбрать", "{FF5C5C}Отмена", 5)
+		sampShowDialog(2001, ">{FFB300}Посты", "                             "..COLOR_MAIN.."Выберите пост\n"..table.concat(post, "\n"), "{69FF5C}Выбрать", "{FF5C5C}Отмена", 5)
 		sampSetDialogClientside(false)
 	elseif bool then
 		thread = lua_thread.create(function()
@@ -3251,3 +3251,11 @@ function updateCheck()
 			end
 		end)
 end
+addEventHandler('onWindowMessage', function(msg, key)
+    if (mainWin.v) then
+        if (key == VK_ESCAPE) then
+            mainWin.v = not mainWin.v
+            consumeWindowMessage(true, true);
+        end
+    end
+end);
