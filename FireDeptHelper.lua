@@ -3243,7 +3243,7 @@ function updateCheck()
 							if upd.version == scr.version then
 								sampAddChatMessage(SCRIPT_PREFIX .."Вы используете актуальную версию скрипта - v"..scr.version.." от "..newdate, SCRIPT_COLOR)
 							else
-								sampAddChatMessage(SCRIPT_PREFIX .."Имеется обновление до версии v"..newversion.." от "..newdate.."! /fd > О скрипте > Обновить", SCRIPT_COLOR)
+								sampAddChatMessage(SCRIPT_PREFIX .."Имеется обновление до версии v"..newversion.." от "..newdate.."! "..COLOR_SECONDARY.."/fd > О скрипте > Обновить", SCRIPT_COLOR)
 							end
 						end
 					end
