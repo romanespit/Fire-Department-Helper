@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.1.1")
+script_version("1.2.0")
 script_properties("work-in-pause")
 setver = 1
  
@@ -13,6 +13,11 @@ local encoding = require "encoding"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local dlstatus = require("moonloader").download_status
+local SCRIPT_COLOR = 0xFFE5911A
+local COLOR_MAIN = "{E5911A}"
+local COLOR_SECONDARY = "{1AE591}"
+local COLOR_WHITE = "{FFFFFF}"
+local SCRIPT_PREFIX = COLOR_WHITE.."["..COLOR_MAIN.."FDHelper"..COLOR_WHITE.."]: "
  
 local sampfuncsNot = [[
  Не обнаружен файл SAMPFUNCS.asi в папке игры, вследствие чего
@@ -157,7 +162,6 @@ local sx, sy = getScreenResolution()
 local mainWin	= imgui.ImBool(false) -- Гл.окно
 local paramWin = imgui.ImBool(false) -- окно параметров
 local spurBig = imgui.ImBool(false) -- большое окно шпоры
-local depWin = imgui.ImBool(false) -- окно департамента
 local mainEditWin = imgui.ImBool(false)
 local iconwin	= imgui.ImBool(false)
 local profbWin = imgui.ImBool(false)
@@ -414,22 +418,6 @@ local sobes = {
 	num = 0
 }
 -- buf_nick
---Departament
-local dep = {
-	list = {"[100,3 KHz] - Все Гос. Стуктуры", "[102,7 KHz] - Экстренная", "[104,8] - Для связи с МО/МЮ", "[109,6 kHz] - Для связи с Т.С.Р", "[103,9 kHz] - Собеседование", "[Информация] - Тех. неполадки","/gov - Новости"},
-	sel_all = {u8"Армия ЛС", u8"ВМС", u8"Тюрьма ЛВ", u8"Полиция ЛС", u8"Полиция СФ", u8"Полиция ЛВ", u8"Областная полиция", u8"ФБР", u8"Больница ЛС", u8"Больница СФ", u8"Больница ЛВ", u8"СМИ ЛС", u8"СМИ СФ", u8"СМИ ЛВ", u8"Банк", u8"Правительство", u8"Автошкола", u8"Министр Здравоохранения", u8"Министр Обороны", u8"Министр Юстиций"},
-	sel_chp = {u8"Армия ЛС", u8"ВМС", u8"Тюрьма ЛВ", u8"Полиция ЛС", u8"Полиция СФ", u8"Полиция ЛВ", u8"Областная полиция", u8"ФБР", u8"Больница ЛС", u8"Больница СФ", u8"Больница ЛВ", u8"СМИ ЛС", u8"СМИ СФ", u8"СМИ ЛВ", u8"Банк", u8"Правительство", u8"Автошкола", u8"Министр Здравоохранения", u8"Министр Обороны", u8"Министр Юстиций"},
-	sel_tsr = {u8"Тюрьма ЛВ", u8"Министр Обороны"},
-	sel_mzmomu = {u8"Армия ЛС", u8"ВМС", u8"Тюрьма ЛВ", u8"Полиция ЛС", u8"Полиция СФ", u8"Полиция ЛВ", u8"Областная полиция", u8"ФБР", u8"Министр Обороны", u8"Министр Юстиций"},
-	sel = imgui.ImInt(0),
-	select_dep = {0, 0},
-	input = imgui.ImBuffer(101),
-	bool = {false, false, false, false, false, false},
-	time = {0,0}, 
-	newsN = imgui.ImInt(0),
-	news = {},
-	dlog = {}
-}
 
 --edit main bind
 local buf_mainedit = imgui.ImBuffer(51200) 
@@ -568,10 +556,10 @@ cmdBind = {
 		rb = false
 	},
 	[6] = {
-		cmd = "/dep",
+		cmd = "/fracrp",
 		key = {},
-		desc = "Меню рации депортамента",
-		rank = 5,
+		desc = "Выдать отметку об участии в РП процессе",
+		rank = 6,
 		rb = false
 	},
 	[7] = {
@@ -766,14 +754,6 @@ function main()
 			print("{F54A4A}Ошибка. Отсутствует папка. {82E28C}Создание папки для шпор")
 			createDirectory(dirml.."/FDHelper/Шпаргалки/")
 		end
-		if not doesDirectoryExist(dirml.."/FDHelper/Департамент/") then
-			print("{F54A4A}Ошибка. Отсутствует папка. {82E28C}Создание папки для новостей в департамент")
-			createDirectory(dirml.."/FDHelper/Департамент/")
-		end
-		--Загрузка файла настроек
-		if doesDirectoryExist(dirml.."/FDHelper/Департамент/") then
-			getGovFile()
-		end
 		if doesFileExist(dirml.."/FDHelper/main.txt") then
 			local f = io.open(dirml.."/FDHelper/main.txt")
 			buf_mainedit.v =  u8(f:read("*a"))
@@ -931,6 +911,7 @@ function main()
 		sampRegisterChatCommand("fd", function() mainWin.v = not mainWin.v end)
 		sampRegisterChatCommand("fdrl", function() scr:reload() end)
 		sampRegisterChatCommand("+warn", funCMD.warn)
+		sampRegisterChatCommand("fracrp", funCMD.fracrp)
 		sampRegisterChatCommand("-warn", funCMD.uwarn)
 		sampRegisterChatCommand("gr", funCMD.rank)
 		sampRegisterChatCommand("inv", funCMD.inv)
@@ -938,18 +919,18 @@ function main()
 		sampRegisterChatCommand("+mute", funCMD.mute)
 		sampRegisterChatCommand("-mute", funCMD.umute)
 		sampRegisterChatCommand("mb", funCMD.memb)
-		sampRegisterChatCommand("dep", funCMD.dep)
 		sampRegisterChatCommand("post", funCMD.post)
 		sampRegisterChatCommand("ts", funCMD.time)
 		repeat wait(100) until sampIsLocalPlayerSpawned()
 		_, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
 		myNick = sampGetPlayerNickname(myid)
 		
-		sampAddChatMessage(string.format("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Приветствую, %s. Скрипт загружен. Главное меню - {22E9E3}/fd{FFFFFF}. Главная отыгровка - {22E9E3}кнопка O (англ)", sampGetPlayerNickname(myid):gsub("_"," ")), 0xEE4848)
+		sampAddChatMessage(string.format(SCRIPT_PREFIX.."Приветствую, %s. Скрипт успешно загружен. Версия скрипта: %s", sampGetPlayerNickname(myid):gsub("_"," "),scr.version), SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX.."Команды: Главное меню - "..COLOR_SECONDARY.."/fd"..COLOR_WHITE..". Главная отыгровка - "..COLOR_SECONDARY.."кнопка O (англ)", SCRIPT_COLOR)
 		wait(200)
 		if buf_nick.v == "" then 
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Похоже у тебя не настроена основная информация. ", 0xEE4848)
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Зайди в главном меню в раздел \"Настройки\" и настрой себе всё по \"фэн-шую\".", 0xEE4848)
+			sampAddChatMessage(SCRIPT_PREFIX.."Похоже у тебя не настроена основная информация. ", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX.."Зайди в главном меню в раздел \"Настройки\" и настрой себе всё по \"фэн-шую\".", SCRIPT_COLOR)
 		end
   while true do
 	wait(0)
@@ -998,7 +979,7 @@ function main()
 	if cb_hud.v then showInputHelp() end
 	if cb_hudTime.v and not isPauseMenuActive() then hudTimeF() end
 	--if hudPing and not isPauseMenuActive() then pingGraphic(sx/9*8-20, sy/4) end
-		imgui.Process = mainWin.v or iconwin.v or depWin.v
+		imgui.Process = mainWin.v or iconwin.v
   end
 end
  
@@ -1122,7 +1103,7 @@ function imgui.OnDrawFrame()
 		local sw, sh = getScreenResolution()
 		imgui.SetNextWindowSize(imgui.ImVec2(850, 450), imgui.Cond.FirstUseEver)
 		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(fa.ICON_FIRE .. " FireDeptHelper "..scr.version, mainWin, imgui.WindowFlags.NoResize);
+		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version, mainWin, imgui.WindowFlags.NoResize);
 			--imgui.SetWindowFontScale(1.1)
 			--///// Func menu button
 			imgui.BeginChild("Main menu", imgui.ImVec2(155, 0), true)
@@ -1158,7 +1139,7 @@ function imgui.OnDrawFrame()
 					imgui.Spacing()
 				imgui.Separator()
 					imgui.Spacing()
-				if ButtonMenu(fa.ICON_SEARCH .. u8"  О департаменте", select_menu[7]) then select_menu = {false, false, false, false, false, false, true} end
+				if ButtonMenu(fa.ICON_SEARCH .. u8"  О скрипте", select_menu[7]) then select_menu = {false, false, false, false, false, false, true} end
 					imgui.Spacing()
 			imgui.EndChild();
 			--///// Main menu
@@ -1276,7 +1257,7 @@ function imgui.OnDrawFrame()
 				f:write(encodeJson(setting))
 				f:flush()
 				f:close()
-				sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Настройки сохранены.", 0xEE4848)
+				sampAddChatMessage(SCRIPT_PREFIX.."Настройки сохранены.", SCRIPT_COLOR)
 				needSave = false
 			end
 			imgui.PopStyleColor(1)
@@ -1667,15 +1648,20 @@ function imgui.OnDrawFrame()
 							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
 							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") end
 							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
-							imgui.SameLine()
-							imgui.TextColoredRGB("{68E15D}(наведи)")
 					
 					imgui.Bullet()
-					imgui.TextColoredRGB("Разработчик - {FFB700}romanespit")
+					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Консерва с 07)")
+					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
+					if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru") end
+					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://romanespit.ru', nil, nil, 1)) end
 					imgui.Bullet()
-					imgui.TextColoredRGB("Основа {FFB700}MedicalHelper by Kevin Hatiko")	
+					imgui.TextColoredRGB("Основа {74BAF4}MedicalHelper by Kevin Hatiko")
+					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
+					if imgui.IsItemClicked(0) then setClipboardText("https://github.com/TheMrThor/MedicalHelper") end
+					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/TheMrThor/MedicalHelper', nil, nil, 1)) end	
 					imgui.Bullet()
-					imgui.TextColoredRGB("Фиксил MedicalHelper {FFB700}сырный [07]Alexandr_Morenzo")	
+					imgui.TextColoredRGB("Фиксил MedicalHelper {FFB700}сырный Alexandr_Morenzo c 07")
+					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
 						if imgui.Button(u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
@@ -1953,39 +1939,6 @@ function imgui.OnDrawFrame()
 		if imgui.IsItemClicked(0) then setClipboardText("{getNickByID:}") end
 		imgui.TextColoredRGB("{C1C1C1} - Возращает ник игрока по его ID. \n\tПример, {getNickByID:25}, вернёт ник игрока под ID 25.)")
 
-
-	--	imgui.TextColoredRGB("")
-			-- imgui.Spacing()
-			-- imgui.Bullet()
-			-- imgui.TextColoredRGB("{FF8400}{dialog}{C1C1C1} - создание собстрвенных диалогов. Более подробно ниже:")
-			-- imgui.Spacing()
-			-- imgui.Spacing()
-			-- if imgui.TreeNode(u8"Интрукция по пользованию параметром {dialog}") then
-			-- 	imgui.Separator()
-			-- 	imgui.Spacing()
-			-- 	imgui.Text(u8"С помощью следующего параметра можно создавать собственные диалоги с выбором дальнейшего\n действия. Примером такого диалога может послужить отыгровка выдачи мед.карты, где необходимо\n выбрать результат обследования (Здоровый, имеются отклонения, псих. отклонения).")
-			-- 	imgui.Spacing()
-			-- 	imgui.Text(u8"Пример написания диалога:")
-			-- 	imgui.BeginGroup()
-			-- 		imgui.PushStyleColor(imgui.Col.FrameBg, imgui.ImColor(70, 70, 70, 200):GetVec4())
-			-- 		imgui.InputTextMultiline("##dialogPar", helpDialog, imgui.ImVec2(210, 180), 16384)
-			-- 		imgui.PopStyleColor(1)
-			-- 		imgui.TextDisabled(u8"Для копирования используйте\nCtrl + C. Вставка - Ctrl + V")
-			-- 	imgui.EndGroup()
-			-- 	imgui.SameLine()
-			-- 	imgui.BeginGroup()
-			-- 			imgui.TextColoredRGB("{FF8400}{dialog}	{FFFFFF}- {EF5454}обязательный параметр{FFFFFF}, указывающий начало конструкции \nдиалога. Название прописывается после \"=\"(равно)")
-			-- 			imgui.TextColoredRGB("{FF8400}[name]=	{FFFFFF}- необязательный параметр. Указывает название самого диалога.\n Название прописывается после \"=\"(равно)")
-			-- 			imgui.TextColoredRGB("{FF8400}[1]= 		{FFFFFF}- Квадратные скорби с номером выбором являются обязятельным\n требованием. Доступно до 9 вариантов выбора. После \"=\"(равно) указывать\n текст не обязательно.")
-			-- 			imgui.TextColoredRGB("{FF8400}{dialogEnd}	{FFFFFF}- {EF5454}обязательный параметр{FFFFFF}, указывающий на конец конструкции \nдиалога.")
-			-- 			imgui.TextColoredRGB("Все необязательные параметры являются не критичными, но рекомендуется\n их указывать для визуального понимания.")
-						
-						
-			-- 			--imgui.TextColoredRGB("")
-			-- 	imgui.EndGroup()
-			-- 		imgui.TextColoredRGB("{F03636}Примечания: \n{FFFFFF}1. Текст для указанного номера отыгровки прописывать с новой строчки после номера пукнта. \n(Указано в примере)\n2. Перед и после конструкции диалога можно прописывать обычные отыгровки, а также создавать \nдополнительные диалоги.\n3. Не допускается создавать диалоги внутри самой конструкции диалога.")
-			-- 	imgui.TreePop()
-			---end
 		
 		imgui.End()
 	end
@@ -2062,246 +2015,6 @@ function imgui.OnDrawFrame()
 		end
 		imgui.End()
 	end
-	
-
-	if depWin.v then
-		local sw, sh = getScreenResolution()
-		imgui.SetNextWindowSize(imgui.ImVec2(865, 360), imgui.Cond.FirstUseEver)
-		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(fa.ICON_SIGNAL .. u8" Меню рации департамента.", depWin, imgui.WindowFlags.NoResize);
-		--imgui.SetWindowFontScale(1.1)
-			imgui.BeginGroup()
-				imgui.BeginChild("dep list", imgui.ImVec2(225, 215), true)
-					if ButtonDep(u8(dep.list[1]), dep.bool[1]) then-- все
-						dep.bool = {true, false, false, false, false, false}
-						dep.select_dep[1] = 1
-						
-					end
-					if ButtonDep(u8(dep.list[2]), dep.bool[2]) then-- чп
-						dep.bool = {false, true, false, false, false, false}
-						dep.select_dep[1] = 2
-						
-					end
-					if ButtonDep(u8(dep.list[3]), dep.bool[3]) then-- мо/мю
-						dep.bool = {false, false, true, false, false, false, false}
-						dep.select_dep[1] = 3
-						
-					end
-					if ButtonDep(u8(dep.list[4]), dep.bool[4]) then-- тср
-						dep.bool = {false, false, false, true, false, false, false}
-						dep.select_dep[1] = 4
-						
-					end
-					if ButtonDep(u8(dep.list[5]), dep.bool[5]) then-- собес
-						dep.bool = {false, false, false, false, true, false, false}
-						dep.select_dep[1] = 5
-						
-					end
-					if ButtonDep(u8(dep.list[6]), dep.bool[6]) then-- тех
-						dep.bool = {false, false, false, false, false, true, false}
-						dep.select_dep[1] = 6
-						
-					end
-					if ButtonDep(u8(dep.list[7]), dep.bool[7]) then-- новости
-						dep.bool = {false, false, false, false, false, false, true}
-						dep.select_dep[1] = 7
-						getGovFile()
-					end
-				imgui.EndChild()
-
-					if dep.select_dep[1] < 5 and dep.select_dep[1] ~= 0 and dep.select_dep[2] == 0 then
-						imgui.Dummy(imgui.ImVec2(0, 65)) 
-						if imgui.Button(u8"Подключиться", imgui.ImVec2(225, 30)) then
-							for i,v in ipairs(dep.bool) do
-								if v == true then 
-									dep.select_dep[2] = i
-								end
-							end
-							if dep.select_dep[2] == 1 then sampSendChat(string.format("/d [%s] - [Информация] Перешел на частоту 100,3.", rankFix())) end
-							if dep.select_dep[2] == 2 then sampSendChat(string.format("/d [%s] - [Информация] Перешел на частоту 102,7.", rankFix())) end
-							if dep.select_dep[2] == 3 then sampSendChat(string.format("/d [%s] - [Информация] Перешел на частоту 104,8.", rankFix())) end
-							if dep.select_dep[2] == 4 then sampSendChat(string.format("/d [%s] - [Информация] Перешел на частоту 109,6.", rankFix())) end
-						end
-					elseif dep.bool[5] then
-						imgui.SetCursorPosX(50)
-						imgui.Text(u8"Задано время:  "..dep.time[1]..":"..dep.time[2])
-						imgui.Spacing()
-						imgui.Spacing()
-							imgui.SetCursorPosX(60)
-							imgui.Text(u8"Часы\t\t   Минуты"); 
-							imgui.SetCursorPosX(45)
-							if imgui.SmallButton("<<") and dep.time[1] > 0 then dep.time[1] = dep.time[1] - 1 end
-							imgui.SameLine()
-							imgui.Text(tostring(dep.time[1]))
-							imgui.SameLine()
-							if imgui.SmallButton(">>") and dep.time[1] < 24 then dep.time[1] = dep.time[1] + 1 end
-							imgui.SameLine()
-							imgui.SetCursorPosX(125)
-							if imgui.SmallButton("<<##1") and dep.time[2] > 0 then dep.time[2] = dep.time[2] - 5 end
-							imgui.SameLine()
-							imgui.Text(tostring(dep.time[2]))
-							imgui.SameLine()
-							if imgui.SmallButton(">>##1") and dep.time[2] < 55 then dep.time[2] = dep.time[2] + 5 end
-						imgui.Spacing()
-						imgui.Spacing()
-						if imgui.Button(u8"Объявить", imgui.ImVec2(225, 30)) then
-							lua_thread.create(function()
-							local inpSob = string.format("%d,%d,%s", dep.time[1], dep.time[2], u8:decode(list_org[num_org.v+1]))
-								sampSendChat(string.format("/d [%s] - [Информация] Перешёл на частоту 103,9", u8:decode(list_org[num_org.v+1])))
-								wait(1750)
-								sampSendChat(string.format("/d [%s] - [103,9] Занимаю гос.волну новостей для проведения собеседования.", u8:decode(list_org[num_org.v+1])))
-								wait(500)
-								sampSendChat("/lmenu")
-								repeat wait(100) until sampIsDialogActive() and sampGetCurrentDialogId() == 1214
-								sampSetCurrentDialogListItem(2)
-								wait(100)
-								sampCloseCurrentDialogWithButton(1)
-								repeat wait(100) until sampIsDialogActive() and sampGetCurrentDialogId() == 1336
-								sampSetCurrentDialogListItem(0)
-								wait(100)
-								sampCloseCurrentDialogWithButton(1)
-								repeat wait(0) until sampIsDialogActive() and sampGetCurrentDialogId() == 1335
-								wait(350)
-								sampSetCurrentDialogEditboxText(inpSob)
-								wait(350)
-								sampCloseCurrentDialogWithButton(1)
-								wait(1700)
-								sampSendChat(string.format("/d [%s] - [Информация] Покидаю частоту 103,9.",  u8:decode(list_org[num_org.v+1]))) 
-							end)
-						end
-					elseif  dep.bool[6] then
-						imgui.Dummy(imgui.ImVec2(0, 65)) 
-						if imgui.Button(u8"Объявить", imgui.ImVec2(225, 30)) then 
-							sampSendChat(string.format("/d [%s] - [Информация] Тех. неполадки.", rankFix())) 
-						end
-					elseif dep.bool[7] then
-						imgui.Spacing()
-						imgui.PushItemWidth(225)
-						imgui.Combo("##news", dep.newsN, dep.news)
-						imgui.PopItemWidth()
-						imgui.Spacing()
-							
-							imgui.Text(u8"Также можете сами добавить или \nизменять новости.")
-
-							imgui.SetCursorPos(imgui.ImVec2(140, 297))
-							imgui.TextColoredRGB("{29EB2F}Папка")
-							if imgui.IsItemHovered() then 
-								imgui.SetTooltip(u8"Кликните, чтобы открыть папку.")
-							end
-							if imgui.IsItemClicked(0) then
-								print(shell32.ShellExecuteA(nil, 'open', dirml.."/FDHelper/Департамент/", nil, nil, 1))
-							end
-						imgui.Spacing()
-						imgui.Spacing()
-						if imgui.Button(u8"Подать", imgui.ImVec2(225, 30)) then
-							lua_thread.create(function()
-							-- if tonumber(os.date("%M")) > 17 then --17
-							-- 	sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Gov Новости назначить можно только от 0 до 15 минут.", 0xEE4848)
-							-- 	return
-							-- end
-							
-								if doesFileExist(dirml.."/FDHelper/Департамент/"..u8:decode(dep.news[dep.newsN.v+1])..".txt") then
-								--	print(u8:decode(dep.news[dep.newsN.v+1]))
-									for line in io.lines(dirml.."/FDHelper/Департамент/"..u8:decode(dep.news[dep.newsN.v+1])..".txt") do
-										sampSendChat(line)
-										wait(1000)
-									end
-								end
-							end)
-						end
-					elseif dep.select_dep[2] < 5 and dep.select_dep[2] ~= 0 then
-						imgui.PushItemWidth(225)
-						if imgui.Button(u8"Отключиться", imgui.ImVec2(225, 25)) then
-							if dep.select_dep[2] == 1 then sampSendChat(string.format("/d [%s] - [Информация] Покидаю частоту 100,3.", rankFix())) end
-							if dep.select_dep[2] == 2 then sampSendChat(string.format("/d [%s] - [Информация] Покидаю частоту 102,7.", rankFix())) end
-							if dep.select_dep[2] == 3 then sampSendChat(string.format("/d [%s] - [Информация] Покидаю частоту 104,8.", rankFix())) end
-							if dep.select_dep[2] == 4 then sampSendChat(string.format("/d [%s] - [Информация] Покидаю частоту 109,6.", rankFix())) end
-							dep.select_dep[2] = 0
-						end
-						imgui.Spacing()
-						imgui.Spacing()
-						imgui.Text(u8"Кому подключиться:")
-						if dep.bool[1] then
-						imgui.Combo("##orgs", dep.sel, dep.sel_all)
-						imgui.Spacing()
-						imgui.Spacing()
-						imgui.TextDisabled(u8"End - Открыть чат с шаблоном")
-							if wasKeyReleased(VK_END) and not sampIsChatInputActive() then
-								sampSetChatInputText(string.format("/d [%s] - [100,3] - [%s]: ", rankFix(), u8:decode(dep.sel_all[dep.sel.v+1])));
-								sampSetChatInputEnabled(true)  
-							end
-						elseif dep.bool[2] then
-						imgui.Combo("##orgs", dep.sel, dep.sel_chp)
-						imgui.Spacing()
-						imgui.Spacing()
-						imgui.TextDisabled(u8"End - Открыть чат с шаблоном")
-							if wasKeyReleased(VK_END) and not sampIsChatInputActive() then
-								sampSetChatInputText(string.format("/d [%s] - [102,7] - [%s]: ", rankFix(), u8:decode(dep.sel_chp[dep.sel.v+1])));
-								sampSetChatInputEnabled(true) 
-							end
-						elseif dep.bool[3] then
-							imgui.Combo("##orgs", dep.sel, dep.sel_mzmomu)
-							imgui.Spacing()
-							imgui.Spacing()
-							imgui.TextDisabled(u8"End - Открыть чат с шаблоном")
-							if wasKeyReleased(VK_END) and not sampIsChatInputActive() then
-								sampSetChatInputText(string.format("/d [%s] - [104,8] - [%s]: ", rankFix(), u8:decode(dep.sel_mzmomu[dep.sel.v+1])));
-								sampSetChatInputEnabled(true) 
-							end
-						elseif dep.bool[4] then
-						imgui.Combo("##orgs", dep.sel, dep.sel_tsr)
-						imgui.Spacing()
-						imgui.Spacing()
-						imgui.TextDisabled(u8"End - Открыть чат с шаблоном")
-							if wasKeyReleased(VK_END) and not sampIsChatInputActive() then
-								sampSetChatInputText(string.format("/d [%s] - [109,6] - [%s]: ", rankFix(), u8:decode(dep.sel_tsr[dep.sel.v+1])));
-								sampSetChatInputEnabled(true) 
-							end
-						end
-						imgui.PopItemWidth()
-
-					else
-						imgui.SetCursorPos(imgui.ImVec2(20, 260)) 
-						imgui.Text(u8"Выберите волну департамента")
-					end
-			imgui.EndGroup()
-			imgui.SameLine()
-			imgui.BeginChild("dep log", imgui.ImVec2(0, 0), true)
-				imgui.SetCursorPosX(250)
-				imgui.Text(u8"Локальный ат")
-				if imgui.IsItemHovered() then imgui.SetTooltip(u8"Кликните ПКМ для очистки") end
-				if imgui.IsItemClicked(1) then dep.dlog = {} end
-					imgui.BeginChild("dep logg", imgui.ImVec2(0, 260), true)
-						for i,v in ipairs(dep.dlog) do
-							imgui.TextColoredRGB(v)
-						end
-						imgui.SetScrollY(imgui.GetScrollMaxY())
-					imgui.EndChild()
-				imgui.Spacing()
-				imgui.Text(u8"Вы:");
-				imgui.SameLine()
-				imgui.PushItemWidth(490)
-				imgui.InputText("##chat", dep.input)
-				imgui.PopItemWidth()
-				imgui.SameLine()
-				if imgui.Button(u8"Отправить", imgui.ImVec2(80, 20)) then
-					if dep.select_dep[2] < 5 and dep.select_dep[2] > 0 then
-						if dep.bool[1] then
-							sampSendChat(string.format("/d [%s] - [100,3] - [%s]: "..u8:decode(dep.input.v), rankFix(), u8:decode(dep.sel_all[dep.sel.v+1])))
-						elseif dep.bool[2] then
-							sampSendChat(string.format("/d [%s] - [102,7] - [%s]: "..u8:decode(dep.input.v), rankFix(), u8:decode(dep.sel_chp[dep.sel.v+1])))
-						elseif dep.bool[3] then
-							sampSendChat(string.format("/d [%s] - [104,8] - [%s]: "..u8:decode(dep.input.v), rankFix(), u8:decode(dep.sel_mzmomu[dep.sel.v+1])))
-						elseif dep.bool[4] then
-							sampSendChat(string.format("/d [%s] - [109,6] - [%s]: "..u8:decode(dep.input.v), rankFix(), u8:decode(dep.sel_tsr[dep.sel.v+1])))
-						end
-					end
-					dep.input.v = ""
-				end
-			imgui.EndChild()
-		imgui.End()
-	end
- 
 	
 	if mainEditWin.v then
 		local sw, sh = getScreenResolution()
@@ -2560,8 +2273,14 @@ function onHotKeyCMD(id, keys)
 					sampSendChat("/members")
 				elseif k == 5 then --пост
 					funCMD.post()				
-				elseif k == 6 then -- деп
-					depWin.v = not depWin.v
+				elseif k == 6 then
+					if resTarg then
+						sampSetChatInputEnabled(true)
+						sampSetChatInputText("/fracrp "..targID)
+					else
+						sampSetChatInputEnabled(true)
+						sampSetChatInputText("/fracrp ")
+					end
 				elseif k == 7 then
 					if resTarg then
 						sampSetChatInputEnabled(true)
@@ -2625,7 +2344,7 @@ function onHotKeyCMD(id, keys)
 			end
 		end
 	else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 	end
 end
 
@@ -2705,9 +2424,9 @@ end
 local function playBind(tb)
 	if not tb.debug.file or #tb.debug.close > 0 then
 		if not tb.debug.file then
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Файл с текстом бинда не обнаружен. ", 0xEE4848)
+			sampAddChatMessage(SCRIPT_PREFIX.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
 		elseif #tb.debug.close > 0 then
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", 0xEE4848)
+			sampAddChatMessage(SCRIPT_PREFIX.."Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", SCRIPT_COLOR)
 		end
 		addOneOffSound(0, 0, 0, 1058)
 		return false
@@ -2875,35 +2594,7 @@ function getSpurFile()
 end
 
 
-function getGovFile()
-local gov = [[
-/gov Ув.Жители Штата, сегодня в Пожарном департаменте пройдёт день открытых дверей
-/gov У нас вы получите: лучших сотрудников, быстрый карьерный рост, высокую зарплату
-/gov Ждём всех желающих в холле департамента
-]]
-lua_thread.create(function()
-	if doesDirectoryExist(dirml.."/FDHelper/Департамент/") then
-		if not doesFileExist(dirml.."/FDHelper/Департамент/День открытых дверей.txt") then
-			local f = io.open(dirml.."/FDHelper/Департамент/День открытых дверей.txt", "w")
-			f:write(gov)
-			f:flush()
-			f:close()
-		end
-		dep.news = {}
-		local search, name = findFirstFile("moonloader/FDHelper/Департамент/*.txt")
-		while search do
-			if not name then findClose(search) else
-				table.insert(dep.news, u8(tostring(name:gsub(".txt", ""))))
-				name = findNextFile(search)
-				if name == nil then
-					findClose(search)
-					break
-				end
-			end
-		end
-	end
-end)
-end
+
 
 
 
@@ -2947,7 +2638,7 @@ function tags(par)
 				if sampIsPlayerConnected(id) then
 					par = par:gsub(v, tostring(sampGetPlayerNickname(id))):gsub("_", " ")
 				else
-					sampAddChatMessage("{FFFFFF}[{EE4848}FDH:Ошибка{FFFFFF}]: Параметр {getNickByID:ID} не смог вернуть ник игрока. Возможно игрок не в сети.", 0xEE4848)
+					sampAddChatMessage(SCRIPT_PREFIX.."Параметр {getNickByID:ID} не смог вернуть ник игрока. Возможно игрок не в сети.", SCRIPT_COLOR)
 					par = par:gsub(v,"")
 				end
 			end
@@ -2967,7 +2658,7 @@ function tags(par)
 			if targID ~= nil and targID >= 0 and targID <= 1000 and sampIsPlayerConnected(targID) then
 				par = par:gsub("{getNickByTarget}", tostring(sampGetPlayerNickname(targID):gsub("_", " ")))
 			else
-				sampAddChatMessage("{FFFFFF}[{EE4848}FDH:Ошибка{FFFFFF}]: Параметр {getNickByTarget} не смог вернуть ник игрока. Возможно Вы не целились на игрока, либо он не в сети.", 0xEE4848)
+				sampAddChatMessage(SCRIPT_PREFIX.."Параметр {getNickByTarget} не смог вернуть ник игрока. Возможно Вы не целились на игрока, либо он не в сети.", SCRIPT_COLOR)
 				par = par:gsub("{getNickByTarget}", tostring(""))
 			end
 		end
@@ -2978,11 +2669,11 @@ end
 funCMD = {} 
 function funCMD.main()
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if not u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Подождите-ка, сначала нужно заполнить базовую информацию. {90E04E}/fd > Настройки > Основная информация", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
 		return
 	end
 	thread = lua_thread.create(function()
@@ -2995,7 +2686,7 @@ function funCMD.main()
 end
 function funCMD.post()
 	if not u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Подождите-ка, сначала нужно заполнить базовую информацию. {90E04E}/fd > Настройки > Основная информация", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
 		return
 	end
 	local bool, post, coord = postGet()
@@ -3007,119 +2698,156 @@ function funCMD.post()
 			postCPcoords.y = nil 
 			postCPcoords.z = nil
 		end
-		sampShowDialog(2001, ">{FFB300}Посты", "                             {55BBFF}Выберите пост\n"..table.concat(post, "\n"), "{69FF5C}Выбрать", "{FF5C5C}Отмена", 5)
+		sampShowDialog(2001, "Посты", "                             "..COLOR_MAIN.."Выберите пост\n"..table.concat(post, "\n"), "{69FF5C}Выбрать", "{FF5C5C}Отмена", 5)
 		sampSetDialogClientside(false)
 	elseif bool then
-		sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
+		thread = lua_thread.create(function()
+			sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
+			if tonumber(post:match("%d+")) >= 3 and tonumber(post:match("%d+")) <= 5 then
+				local veh = getAllVehicles()
+				local counter = 0
+				for k, v in ipairs(veh) do
+					if getCarModel(v) == 407 then counter = counter+1 end
+				end
+				wait(1500)
+				if counter > 0 then sampSendChat("/r Количество пожарных авто в гараже: "..counter.." шт.")
+				elseif counter == 0 then sampSendChat("/r Пожарные авто в гараже отсутствуют.") end
+			end
+		end)
+		
 	end
 end
 function funCMD.warn(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%X+)") then
 		local id, reac = text:match("(%d+)%s(%X+)")
 		thread = lua_thread.create(function()
-				sampSendChat("/do В левом кармане лежит КПК.")
-				wait(2000)
-				sampSendChat("/me достав КПК из левого кармана, ".. chsex("зашёл", "зашла") .." в базу данных "..u8:decode(chgName.org[num_org.v+1]))
-				wait(2000)
-				sampSendChat("/me "..chsex("изменил","изменила").." информацию о сотруднике.")
-				wait(2000)
-				sampSendChat(string.format("/fwarn %s %s", id, reac))
-				wait(2000)
-				sampSendChat("/r Сотруднику с бейджиком №"..id.." был выдан выговор по причине: "..reac)
-			end)
+			sampSendChat("/me достал".. chsex("", "а") .." телефон из кармана и авторизовал".. chsex("ся", "ась") .." в базе Пожарного Департамента")
+			wait(2000)
+			sampSendChat("/me записал".. chsex("", "а") .." выговор в личное дело сотрудника ".. tostring(sampGetPlayerNickname(id):gsub("_", " ")))
+			wait(2000)
+			sampSendChat(string.format("/fwarn %s %s", id, reac))
+			wait(2000)
+			sampSendChat("/r Сотруднику с нашивкой №"..id.." был выдан выговор по причине: "..reac)
+			wait(2000)
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+		end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /+warn [id игрока] [причина].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/+warn [id игрока] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.uwarn(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
 		thread = lua_thread.create(function()
-				sampSendChat("/do В левом кармане лежит КПК.")
+			sampSendChat("/me достал".. chsex("", "а") .." телефон из кармана и авторизовал".. chsex("ся", "ась") .." в базе Пожарного Департамента")
+			wait(2000)
+			sampSendChat("/me удалил".. chsex("", "а") .." выговор из личного дела сотрудника ".. tostring(sampGetPlayerNickname(id):gsub("_", " ")))
+			wait(2000)
+			sampSendChat("/unfwarn "..id)
+			wait(2000)
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+		end)
+		else
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/-warn [id игрока].", SCRIPT_COLOR)
+		end
+end
+function funCMD.fracrp(id)
+	if thread:status() ~= "dead" then 
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		return 
+	end
+	if num_rank.v+1 < 6 then
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		return
+	end
+		if id:find("(%d+)") then
+		thread = lua_thread.create(function()
+				sampSendChat("/me достал".. chsex("", "а") .." телефон из кармана и авторизовал".. chsex("ся", "ась") .." в базе Пожарного Департамента")
 				wait(2000)
-				sampSendChat("/me достав КПК из левого кармана, ".. chsex("зашёл", "зашла") .." в базу данных "..u8:decode(chgName.org[num_org.v+1]))
+				sampSendChat("/me добавил".. chsex("", "а") .." отметку в личное дело сотрудника ".. tostring(sampGetPlayerNickname(id):gsub("_", " ")))
 				wait(2000)
-				sampSendChat("/me "..chsex("изменил","изменила").." информацию о сотруднике.")
+				sampSendChat("/fractionrp "..id)
 				wait(2000)
-				sampSendChat("/unfwarn "..id)
+				sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
 			end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /-warn [id игрока].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/fracrp [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.inv(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
 		thread = lua_thread.create(function()
 					sampSendChat("/do В кармане находятся ключи от шкафчиков.")
 					wait(2000)
-					sampSendChat("/me потянувшись во внутренний карман, "..chsex("достал","достала").." оттуда ключ.")
+					sampSendChat("/me достал"..chsex("","а").." из кармана ключ.")
 					wait(2000)
-					sampSendChat("/me "..chsex("передал","передала").." ключ от шкафчика №"..id.." с формой человеку напротив.")
+					sampSendChat("/me передал"..chsex("","а").." ключ от шкафчика №"..id.." с формой человеку напротив.")
+					wait(2000)
+					sampSendChat("/me зайдя в базу данных, создал"..chsex("","а").." учетную запись новому сотруднику")
 					wait(1000)
 					sampSendChat("/invite "..id)
-					wait(2000)
-					sampSendChat("/r Гражданину с порядковым номером №"..id.." была выдана форма с ключами и пропуском.")
+					-- Отыгровку в рацию убрал ввиду новой системы предложений на аризонке
 			end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /inv [id игрока].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/inv [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.unv(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%X+)") then
 		local id, reac = text:match("(%d+)%s(%X+)")
 		thread = lua_thread.create(function()
-				sampSendChat("/do В левом кармане лежит КПК.")
+				sampSendChat("/me достав телефон из левого кармана, ".. chsex("зашёл", "зашла") .." в базу данных Пожарного Департамента")
 				wait(2000)
-				sampSendChat("/me достав КПК из левого кармана, ".. chsex("зашёл", "зашла") .." в базу данных "..u8:decode(chgName.org[num_org.v+1]))
+				sampSendChat("/me наш"..chsex("ёл","ла").." учетную запись сотрудника "..tostring(sampGetPlayerNickname(id):gsub("_", " ")))
 				wait(2000)
-				sampSendChat("/me "..chsex("изменил","изменила").." информацию о сотруднике.")
+				sampSendChat("/me заблокировал"..chsex("","а").." учетную запись и аннулировал пропуск")
 				wait(1700)
 				sampSendChat(string.format("/uninvite %d %s", id, reac))
 				wait(1200)
-				sampSendChat("/r Сотрудник с бейджиком №"..id.." был уволен по причине: "..reac)
+				sampSendChat("/r Сотрудник с личным делом №"..id.." был уволен по причине: "..reac)
 			end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /unv [id игрока] [причина].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/unv [id игрока] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.mute(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%d+)%s(%X+)") then
@@ -3131,80 +2859,73 @@ function funCMD.mute(text)
 					wait(2000)
 					sampSendChat("/me ".. chsex("зашел", "зашёл") .." в настройки локальных частот вещания рации")
 					wait(2000)					
-					sampSendChat("/me заглушил".. chsex("", "а") .." локальную частоту вещания с порядковым номером "..id)
+					sampSendChat("/me заглушил".. chsex("", "а") .." рацию №"..id)
 					wait(2000)
 					sampSendChat(string.format("/fmute %d %d %s", id, timem, reac))
 					wait(2000)
-					sampSendChat("/r Сотруднику с бейджиком №"..id.." была отключена рация по причине: "..reac)
+					sampSendChat("/r Рация с порядковым номером №"..id.." была заглушена по причине: "..reac)
 					wait(2000)		
-					sampSendChat("/me повесил".. chsex("", "а") .." обратно рацию на пояс")
+					sampSendChat("/me повесил".. chsex("", "а") .." рацию на пояс")
 			end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /+mute [id игрока] [время в минутах] [причина].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/+mute [id игрока] [время в минутах] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.umute(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
 		thread = lua_thread.create(function()
 					sampSendChat("/do Рация висит на поясе.")
 					wait(2000)		
-					sampSendChat("/me снял рацию с пояса")
+					sampSendChat("/me снял".. chsex("", "а") .." рацию с пояса")
 					wait(2000)
 					sampSendChat("/me ".. chsex("зашёл", "зашла") .." в настройки локальных частот вещания рации")
 					wait(2000)					
-					sampSendChat("/me освободил локальную частоту вещания с порядковым номером "..id)
+					sampSendChat("/me освободил локальную частоту вещания №"..id)
 					wait(2000)
 					sampSendChat("/funmute "..id)
 					wait(2000)		
-					sampSendChat("/me повесил обратно рация на пояс")
+					sampSendChat("/me повесил".. chsex("", "а") .." рацию на пояс")
 			end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /-mute [id игрока].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/-mute [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.rank(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: В данный момент проигрывается отыгровка.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s([1-9])") then
 		local id, rankNum = text:match("(%d+)%s(%d)")
 		local id = tonumber(id); rankNum = tonumber(rankNum);
 		thread = lua_thread.create(function()
-					sampSendChat("/do В кармане находится футляр с ключами от шкафчиков с формой.")
-					wait(1500)
-					sampSendChat(chsex("/me потянувшись во внутренний карман, достал оттуда футляр", "/me потянувшись во внутренний карман, достала оттуда футляр"))
-					wait(1500)
-					sampSendChat(chsex("/me открыв футляр, достал оттуда ключ c номером '"..id.."'", "/me открыв футляр, достала от туда ключ c номером '"..id.."'"))
-					wait(1500)
-					sampSendChat(chsex("/me передал ключ от шкафчика №"..id.." с новой формой человеку напротив", "/me передала ключ от шкафчика №"..id.." с новой формой человеку напротив"))
-					wait(1500)
-					sampProcessChatInput("/giverank "..id.." "..rankNum)
-					wait(1500)
-					sampSendChat("/r Сотруднику с бейджиком №"..id.." была выдана новая форма.")
-			end)
+			sampSendChat("/me достал".. chsex("", "а") .." телефон из кармана и авторизовал".. chsex("ся", "ась") .." в базе Пожарного Департамента")
+			wait(2000)
+			sampSendChat("/me наш".. chsex("ёл", "ла") .." личное дело сотрудника ".. tostring(sampGetPlayerNickname(id):gsub("_", " ")))
+			wait(2000)
+			sampSendChat("/me изменил".. chsex("", "а") .." занимаемую должность в учетной записи сотрудника")
+			wait(2000)
+			sampProcessChatInput("/giverank "..id.." "..rankNum)
+			wait(2000)
+			sampSendChat("/r В личном деле сотрудника №"..id.." была обновлена должность.")
+			wait(2000)
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+		end)
 		else
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Используйте команду /gr [id игрока] [номер ранга].", 0xEE4848)
+		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/gr [id игрока] [номер ранга].", SCRIPT_COLOR)
 		end
-end
-function funCMD.dep()
-	if num_rank.v+1 < 5 then
-		sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", 0xEE4848)
-		return
-	end
-	depWin.v = not depWin.v
 end
 function funCMD.memb()
 	sampSendChat("/members")
@@ -3246,41 +2967,6 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return str1.."\n".."{"..color.."}"..str2
 		else 
 			return str
-		end
-	end
-	
-	if mes:find("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[[%X%a]+%].+%["..u8:decode(list_org[num_org.v+1]).."%]") then
-			local org = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[([%X%a]+)%].+%["..u8:decode(list_org[num_org.v+1]).."%]")
-		if mes:find("связь") and num_rank.v > 3 then -- rankFix()
-			addOneOffSound(0, 0, 0, 1085)
-			addOneOffSound(0, 0, 0, 1085)
-			table.insert(dep.dlog, "{40ABF7}[D] {7ECAFF}["..org.."]: {FFFFFF}Вызывает на связь!")
-		end
-		if depWin.v and dep.select_dep[2] < 5 and dep.select_dep[2] > 0 then
-			local mesD = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[[%X%a]+%].+%["..u8:decode(list_org[num_org.v+1]).."%]%p*(.+)")
-			table.insert(dep.dlog, "{40ABF7}[D] {7ECAFF}["..org.."]: {FFFFFF}"..mesD)
-		end
-	elseif mes:find("%[D%] [%X%a]+ [%a_]+%[%d+%]: %["..u8:decode(list_org[num_org.v+1]).."%].+%[[%X%a]+%]") then
-		if depWin.v and dep.select_dep[2] < 5 and dep.select_dep[2] > 0 then
-			local mesD = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %["..u8:decode(list_org[num_org.v+1]).."%].+%[[%X%a]+%]%p*(.+)")
-			table.insert(dep.dlog, "{40ABF7}[D] {F55C5C}["..u8:decode(list_org[num_org.v+1]).."]: {FFFFFF}"..mesD)
-		end 
-	end
-	if mes:find("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[[%X%a]+%].+%[Министр Здравоохранения%]") and num_rank.v == 10 then
-		local org = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[([%X%a]+)%].+%[Министр Здравоохранения%]")
-		if mes:find("связь") and num_rank.v > 3 then -- rankFix()
-			addOneOffSound(0, 0, 0, 1085)
-			addOneOffSound(0, 0, 0, 1085)
-			table.insert(dep.dlog, "{40ABF7}[D] {7ECAFF}["..org.."]: {FFFFFF}Вызывает на связь!")
-		end 
-		if depWin.v and dep.select_dep[2] < 5 and dep.select_dep[2] > 0 then
-			local mesD = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[[%X%a]+%].+%[Министр Здравоохранения%]%p*(.+)")
-			table.insert(dep.dlog, "{40ABF7}[D] {7ECAFF}["..org.."]: {FFFFFF}"..mesD)
-		end
-	elseif mes:find("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[Министр Здравоохранения%].+%[[%X%a]+%]") and num_rank.v == 10 then
-		if depWin.v and dep.select_dep[2] < 5 and dep.select_dep[2] > 0 then
-			local mesD = mes:match("%[D%] [%X%a]+ [%a_]+%[%d+%]: %[Министр Здравоохранения%].+%[[%X%a]+%]%p*(.+)")
-			table.insert(dep.dlog, "{40ABF7}[D] {F55C5C}[Мин.Здрав]: {FFFFFF}"..mesD)
 		end
 	end
 end
@@ -3328,8 +3014,8 @@ function hook.onSendDialogResponse(id, but, list)
 			postCPcoords.x, postCPcoords.y, postCPcoords.z = coord[list+1].x,coord[list+1].y,coord[list+1].z
 			postCP = createCheckpoint(1, coord[list+1].x, coord[list+1].y, coord[list+1].z, nil, nil, nil, 2)
 			addOneOffSound(0, 0, 0, 1058)
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Была выставлена метка поста №"..list+1, 0xEE4848)
-			sampAddChatMessage("{FFFFFF}[{EE4848}FDHelper{FFFFFF}]: Все посты находятся внутри пожарного департамента", 0xEE4848)
+			sampAddChatMessage(SCRIPT_PREFIX.."Была выставлена метка поста №"..list+1, SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX.."Все посты находятся внутри пожарного департамента", SCRIPT_COLOR)
 		elseif but == 0 then
 		end
 	end
