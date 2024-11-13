@@ -18,6 +18,8 @@ local COLOR_MAIN = "{E5911A}"
 local COLOR_SECONDARY = "{1AE591}"
 local COLOR_WHITE = "{FFFFFF}"
 local SCRIPT_PREFIX = COLOR_WHITE.."["..COLOR_MAIN.."FDHelper"..COLOR_WHITE.."]: "
+local newversion = ""
+local newdate = ""
  
 local sampfuncsNot = [[
  Не обнаружен файл SAMPFUNCS.asi в папке игры, вследствие чего
@@ -927,6 +929,7 @@ function main()
 		
 		sampAddChatMessage(string.format(SCRIPT_PREFIX.."Приветствую, %s. Скрипт успешно загружен. Версия скрипта: %s", sampGetPlayerNickname(myid):gsub("_"," "),scr.version), SCRIPT_COLOR)
 		sampAddChatMessage(SCRIPT_PREFIX.."Команды: Главное меню - "..COLOR_SECONDARY.."/fd"..COLOR_WHITE..". Главная отыгровка - "..COLOR_SECONDARY.."кнопка O (англ)", SCRIPT_COLOR)
+		updateCheck()
 		wait(200)
 		if buf_nick.v == "" then 
 			sampAddChatMessage(SCRIPT_PREFIX.."Похоже у тебя не настроена основная информация. ", SCRIPT_COLOR)
@@ -1103,7 +1106,7 @@ function imgui.OnDrawFrame()
 		local sw, sh = getScreenResolution()
 		imgui.SetNextWindowSize(imgui.ImVec2(850, 450), imgui.Cond.FirstUseEver)
 		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version, mainWin, imgui.WindowFlags.NoResize);
+		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version..(newversion ~= scr.version and " (ЕСТЬ ОБНОВЛЕНИЕ)" or ""), mainWin, imgui.WindowFlags.NoResize);
 			--imgui.SetWindowFontScale(1.1)
 			--///// Func menu button
 			imgui.BeginChild("Main menu", imgui.ImVec2(155, 0), true)
@@ -1664,7 +1667,11 @@ function imgui.OnDrawFrame()
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
-						if imgui.Button(u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
+						if imgui.Button(faicons('rotate')..u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
+						if newversion ~= scr.version then
+							if imgui.Button(faicons('rotate')..u8" Обновить до v"..newversion, imgui.ImVec2(160, 20)) then updateScript() end
+						end
+						
 						imgui.EndChild()
 			end
 
@@ -3193,4 +3200,53 @@ function postGet(sel)
 			return true, postname[5], coord
 		end
 	return false, postname, coord
+end
+
+function updateScript()
+	sampAddChatMessage(SCRIPT_PREFIX .."Производится скачивание новой версии скрипта...", SCRIPT_COLOR)
+	local dir = getWorkingDirectory().."/FireDeptHelper.lua"
+	local url = "https://github.com/romanespit/Fire-Department-Helper/blob/main/FireDeptHelper.lua?raw=true"
+	local updates = nil
+	downloadUrlToFile(url, dir, function(id, status, p1, p2)
+		if status == dlstatus.STATUSEX_ENDDOWNLOAD then
+			if updates == nil then 
+				print("{FF0000}Ошибка при попытке обновиться.") 
+				addOneOffSound(0, 0, 0, 1058)
+				sampAddChatMessage(SCRIPT_PREFIX .."Произошла ошибка при скачивании обновления. Попробуйте позднее...", SCRIPT_COLOR)
+			end
+		end
+		if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+			updates = true
+			print("Загрузка закончена")
+			sampAddChatMessage(SCRIPT_PREFIX .."Скачивание завершено, перезагрузка скрипта...", SCRIPT_COLOR)
+			showCursor(false)
+			scr:reload()
+		end
+	end)
+end
+function updateCheck()
+	sampAddChatMessage(SCRIPT_PREFIX .."Проверяем наличие обновлений...", SCRIPT_COLOR)
+		local dir = getWorkingDirectory().."/FDHelper/files/info.upd"
+		local url = "https://github.com/romanespit/Fire-Department-Helper/blob/main/FDHelper/files/info.upd?raw=true"
+		downloadUrlToFile(url, dir, function(id, status, p1, p2)
+			if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+				lua_thread.create(function()
+					wait(1000)
+					if doesFileExist(getWorkingDirectory().."/FDHelper/files/info.upd") then
+						local f = io.open(getWorkingDirectory().."/FDHelper/files/info.upd", "r")
+						local upd = decodeJson(f:read("*a"))
+						f:close()
+						if type(upd) == "table" then
+							newversion = upd.version
+							newdate = upd.release_date
+							if upd.version == scr.version then
+								sampAddChatMessage(SCRIPT_PREFIX .."Вы используете актуальную версию скрипта - v"..scr.version.." от "..newdate, SCRIPT_COLOR)
+							else
+								sampAddChatMessage(SCRIPT_PREFIX .."Имеется обновление до версии v"..newversion.." от "..newdate.."! /fd > О скрипте > Обновить", SCRIPT_COLOR)
+							end
+						end
+					end
+				end)
+			end
+		end)
 end
