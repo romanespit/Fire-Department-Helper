@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for SFFD. Based on MedicalHelper by Kevin Hatiko")
-script_version("1.2.0")
+script_version("1.1.0")
 script_properties("work-in-pause")
 setver = 1
  
@@ -1106,7 +1106,7 @@ function imgui.OnDrawFrame()
 		local sw, sh = getScreenResolution()
 		imgui.SetNextWindowSize(imgui.ImVec2(850, 450), imgui.Cond.FirstUseEver)
 		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version..(newversion ~= scr.version and " (ЕСТЬ ОБНОВЛЕНИЕ)" or ""), mainWin, imgui.WindowFlags.NoResize);
+		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version..(newversion ~= scr.version and u8" (ЕСТЬ ОБНОВЛЕНИЕ)" or ""), mainWin, imgui.WindowFlags.NoResize);
 			--imgui.SetWindowFontScale(1.1)
 			--///// Func menu button
 			imgui.BeginChild("Main menu", imgui.ImVec2(155, 0), true)
@@ -1667,9 +1667,9 @@ function imgui.OnDrawFrame()
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
-						if imgui.Button(faicons('rotate')..u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
+						if imgui.Button(fa.ICON_WRENCH..u8"Перезагрузить скрипт", imgui.ImVec2(160, 20)) then showCursor(false); scr:reload() end
 						if newversion ~= scr.version then
-							if imgui.Button(faicons('rotate')..u8" Обновить до v"..newversion, imgui.ImVec2(160, 20)) then updateScript() end
+							if imgui.Button(fa.ICON_FIRE..u8" Обновить до v"..newversion, imgui.ImVec2(160, 20)) then updateScript() end
 						end
 						
 						imgui.EndChild()
