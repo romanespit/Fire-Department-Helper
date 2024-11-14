@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.2")
+script_version("1.2.3")
 script_properties("work-in-pause")
 setver = 1
  
@@ -20,6 +20,7 @@ local COLOR_WHITE = "{FFFFFF}"
 local SCRIPT_PREFIX = COLOR_WHITE.."["..COLOR_MAIN.."FDHelper"..COLOR_WHITE.."]: "
 local newversion = ""
 local newdate = ""
+local spawnCars = false
  
 local sampfuncsNot = [[
  Не обнаружен файл SAMPFUNCS.asi в папке игры, вследствие чего
@@ -614,6 +615,13 @@ cmdBind = {
 		rb = false
 	},
 	[14] = {
+		cmd = "/fspcars",
+		key = {},
+		desc = "Заспавнить фракционный транспорт",
+		rank = 9,
+		rb = false
+	},
+	[15] = {
 		cmd = "/ts",
 		key = {},
 		desc = "Быстрый скриншот с автоматическим вводом /time",
@@ -918,6 +926,7 @@ function main()
 		sampRegisterChatCommand("gr", funCMD.rank)
 		sampRegisterChatCommand("inv", funCMD.inv)
 		sampRegisterChatCommand("unv", funCMD.unv)
+		sampRegisterChatCommand("fspcars", funCMD.spawncars)
 		sampRegisterChatCommand("+mute", funCMD.mute)
 		sampRegisterChatCommand("-mute", funCMD.umute)
 		sampRegisterChatCommand("mb", funCMD.memb)
@@ -2355,6 +2364,8 @@ function onHotKeyCMD(id, keys)
 						sampSetChatInputText("/unv ")
 					end
 				elseif k == 14 then
+					funCMD.spawncars()
+				elseif k == 15 then
 					funCMD.time()
 				end
 				
@@ -2832,6 +2843,23 @@ function funCMD.inv(id)
 		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/inv [id игрока].", SCRIPT_COLOR)
 		end
 end
+local spThread = lua_thread.create(function() return end)
+function funCMD.spawncars()
+	if spThread:status() ~= "dead" then 
+		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент уже запущен спавн транспорта. Ожидайте спавна.", SCRIPT_COLOR)
+		return 
+	end
+	if num_rank.v+1 < 9 then
+		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		return
+	end
+	spThread = lua_thread.create(function()
+		sampSendChat("/rb Спавн спец. транспорта через 30 секунд")
+		wait(30000)
+		spawnCars = true
+		sampSendChat("/lmenu")
+	end)
+end
 function funCMD.unv(text)
 	if thread:status() ~= "dead" then 
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
@@ -3037,7 +3065,11 @@ function hook.onSendDialogResponse(id, but, list)
 		end
 	end
 end
-
+function hook.onShowDialog(id, style, title, button1, button2, text)
+	if id == 1214 and spawnCars then
+		sampSendDialogResponse(id, 1, 2) spawnCars = false sampCloseCurrentDialogWithButton(0) return false
+	end
+end
 
 function getStrByState(keyState)
 	if keyState == 0 then
