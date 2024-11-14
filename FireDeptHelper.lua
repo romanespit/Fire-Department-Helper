@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.1")
+script_version("1.2.2")
 script_properties("work-in-pause")
 setver = 1
  
@@ -1665,10 +1665,14 @@ function imgui.OnDrawFrame()
 					imgui.Bullet()
 					imgui.TextColoredRGB("Фиксил MedicalHelper {FFB700}сырный Alexandr_Morenzo c 07")
 					imgui.Bullet()
-					imgui.TextColoredRGB("Если ты с 07 сервера, залетай в топовую семью {ad59ff}First Club")
+					imgui.Text(fa.ICON_HEART)
+					imgui.SameLine()
+					imgui.TextColoredRGB(" {ad59ff}First Club")
 					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
 					if imgui.IsItemClicked(0) then setClipboardText("https://discord.com/invite/first-family") end
-					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://discord.com/invite/first-family', nil, nil, 1)) end	
+					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://discord.com/invite/first-family', nil, nil, 1)) end
+					imgui.SameLine()
+					imgui.TextColoredRGB(" в сердечке")
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
