@@ -3067,7 +3067,10 @@ function hook.onSendDialogResponse(id, but, list)
 end
 function hook.onShowDialog(id, style, title, button1, button2, text)
 	if id == 1214 and spawnCars then
-		sampSendDialogResponse(id, 1, 2) spawnCars = false sampCloseCurrentDialogWithButton(0) return false
+		sampSendDialogResponse(id, 1, 2)
+		spawnCars = false
+		sampCloseCurrentDialogWithButton(0)
+		return false
 	end
 end
 
