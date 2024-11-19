@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.3")
+script_version("1.2.4")
 script_properties("work-in-pause")
 setver = 1
  
@@ -569,28 +569,28 @@ cmdBind = {
 		cmd = "/+warn",
 		key = {},
 		desc = "Выдача выговора сотруднику",
-		rank = 8,
+		rank = 9,
 		rb = false
 	},
 	[8] = {
 		cmd = "/-warn",
 		key = {},
 		desc = "Снять выговор сотруднику",
-		rank = 8,
+		rank = 9,
 		rb = false
 	},
 	[9] = {
 		cmd = "/+mute",
 		key = {},
 		desc = "Выдать мут сотруднику",
-		rank = 8,
+		rank = 9,
 		rb = false
 	},
 	[10] = {
 		cmd = "/-mute",
 		key = {},
 		desc = "Снять мут сотруднику",
-		rank = 8,
+		rank = 9,
 		rb = false
 	},
 	[11] = {
@@ -1660,7 +1660,12 @@ function imgui.OnDrawFrame()
 							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
 							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") end
 							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
-					
+						
+						imgui.SameLine()
+						imgui.TextColoredRGB(" и в {74BAF4}Telegram")
+							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
+							if imgui.IsItemClicked(0) then setClipboardText("https://t.me/ArzFDHelper") end
+							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://t.me/ArzFDHelper', nil, nil, 1)) end
 					imgui.Bullet()
 					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Консерва с 07)")
 					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
@@ -2750,7 +2755,7 @@ function funCMD.warn(text)
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
-	if num_rank.v+1 < 8 then
+	if num_rank.v+1 < 9 then
 		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
@@ -2765,7 +2770,7 @@ function funCMD.warn(text)
 			wait(2000)
 			sampSendChat("/r Сотруднику с нашивкой №"..id.." был выдан выговор по причине: "..reac)
 			wait(2000)
-			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
 		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/+warn [id игрока] [причина].", SCRIPT_COLOR)
@@ -2788,7 +2793,7 @@ function funCMD.uwarn(id)
 			wait(2000)
 			sampSendChat("/unfwarn "..id)
 			wait(2000)
-			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
 		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/-warn [id игрока].", SCRIPT_COLOR)
@@ -2811,7 +2816,7 @@ function funCMD.fracrp(id)
 				wait(2000)
 				sampSendChat("/fractionrp "..id)
 				wait(2000)
-				sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+				sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 			end)
 		else
 		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/fracrp [id игрока].", SCRIPT_COLOR)
@@ -2891,7 +2896,7 @@ function funCMD.mute(text)
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
-	if num_rank.v+1 < 8 then
+	if num_rank.v+1 < 9 then
 		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
@@ -2966,7 +2971,7 @@ function funCMD.rank(text)
 			wait(2000)
 			sampSendChat("/r В личном деле сотрудника №"..id.." была обновлена должность.")
 			wait(2000)
-			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .."телефон в карман")
+			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
 		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/gr [id игрока] [номер ранга].", SCRIPT_COLOR)
