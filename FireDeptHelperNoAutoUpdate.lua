@@ -3554,7 +3554,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	--[[if mes:find("%[D%](.+)ФД(.+)связь") and prikol.v then
+	if mes:find("%[D%](.+)ФД(.+)связь") then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
@@ -3566,7 +3566,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			until stap > 10
 		end)
 	end
-	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
+	--[[if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
 		if not errorspawn then
 			local stap = 0
 			lua_thread.create(function()
