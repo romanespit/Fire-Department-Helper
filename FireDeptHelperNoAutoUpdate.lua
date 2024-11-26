@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.5-noAutoUpdate")
+script_version("1.3.0-noAutoUpdate")
 script_properties("work-in-pause")
 setver = 1
  
@@ -26,13 +26,11 @@ local sampfuncsNot = [[
 
 		Для решения проблемы:
 1. Закройте игру;
-2. Выключите антивирусные программы или в их настройках внесите папку игры в исключение.
-• Возможные антивирусы: 
-Защитник Windows, McAfree, Avast, 360 Total и другие.
-О том как внести в исключение папку воспользуйтесь интернетом.
-3. Произведите повторную установку скрипта.
+2. Зайдите во вкладку "Моды" в лаунчере Аризоны.
+Найдите во вкладке "Моды" установщик "Moonloader" и нажмите кнопку "Установить".
+После завершения установки вновь запустите игру. Проблема исчезнет.
 
-По проблемам заводите issue на GitHub. Ссылка есть на сайте: https://romanespit.ru/fdh
+По проблемам заводите issue на GitHub. Ссылка есть на вкладке: О скрипте
 
 Игра была свернута, поэтому можете продолжить играть. 
 ]]
@@ -46,13 +44,11 @@ local errorText = [[
 
 		Для решения проблемы:
 1. Закройте игру;
-2. Выключите антивирусные программы или в их настройках внесите папку игры в исключение.
-• Возможные антивирусы: 
-Защитник Windows, McAfree, Avast, 360 Total и другие.
-О том как внести в исключение папку воспользуйтесь интернетом.
-3. Произведите повторную установку скрипта.
+2. Зайдите во вкладку "Моды" в лаунчере Аризоны.
+Найдите во вкладке "Моды" установщик "Moonloader" и нажмите кнопку "Установить".
+После завершения установки вновь запустите игру. Проблема исчезнет.
 
-По проблемам заводите issue на GitHub. Ссылка есть на сайте: https://romanespit.ru/fdh
+По проблемам заводите issue на GitHub. Ссылка есть на вкладке: О скрипте
 
 Игра была свернута, поэтому можете продолжить играть. 
 ]]
@@ -60,13 +56,231 @@ local errorText = [[
 local files = {
 "/lib/imgui.lua",
 "/lib/samp/events.lua",
-"/lib/rkeys.lua",
+"/lib/rkeysFD.lua",
 "/lib/faIcons.lua",
 "/lib/crc32ffi.lua",
 "/lib/bitex.lua",
 "/lib/MoonImGui.dll",
 "/lib/matrix3x3.lua"
 }
+
+if doesFileExist(getWorkingDirectory().."/lib/rkeysFD.lua") then
+	print("{82E28C}Чтение библиотеки rkeysFD...")
+	local f = io.open(getWorkingDirectory().."/lib/rkeysFD.lua")
+	f:close()
+else
+	print("{F54A4A}Ошибка. Отсутствует библиотека rkeysFD {82E28C}Создание библиотеки rkeysFD...")
+	local textrkeys = [[
+local vkeys = require 'vkeys'
+
+vkeys.key_names[vkeys.VK_LMENU] = "LAlt"
+vkeys.key_names[vkeys.VK_RMENU] = "RAlt"
+vkeys.key_names[vkeys.VK_LSHIFT] = "LShift"
+vkeys.key_names[vkeys.VK_RSHIFT] = "RShift"
+vkeys.key_names[vkeys.VK_LCONTROL] = "LCtrl"
+vkeys.key_names[vkeys.VK_RCONTROL] = "RCtrl"
+
+local tHotKey = {}
+local tKeyList = {}
+local tKeysCheck = {}
+local iCountCheck = 0
+local tBlockKeys = {[vkeys.VK_LMENU] = true, [vkeys.VK_RMENU] = true, [vkeys.VK_RSHIFT] = true, [vkeys.VK_LSHIFT] = true, [vkeys.VK_LCONTROL] = true, [vkeys.VK_RCONTROL] = true}
+local tModKeys = {[vkeys.VK_MENU] = true, [vkeys.VK_SHIFT] = true, [vkeys.VK_CONTROL] = true}
+local tBlockNext = {}
+local module = {}
+module._VERSION = "1.0.7"
+module._MODKEYS = tModKeys
+module._LOCKKEYS = false
+
+local function getKeyNum(id)
+   for k, v in pairs(tKeyList) do
+      if v == id then
+         return k
+      end
+   end
+   return 0
+end
+
+function module.blockNextHotKey(keys)
+   local bool = false
+   if not module.isBlockedHotKey(keys) then
+      tBlockNext[#tBlockNext + 1] = keys
+      bool = true
+   end
+   return bool
+end
+
+function module.isHotKeyHotKey(keys, keys2)
+   local bool
+   for k, v in pairs(keys) do
+      local lBool = true
+      for i = 1, #keys2 do
+         if v ~= keys2[i] then
+            lBool = false
+            break
+         end
+      end
+      if lBool then
+         bool = true
+         break
+      end
+   end
+   return bool
+end
+
+
+function module.isBlockedHotKey(keys)
+   local bool, hkId = false, -1
+   for k, v in pairs(tBlockNext) do
+      if module.isHotKeyHotKey(keys, v) then
+         bool = true
+         hkId = k
+         break
+      end
+   end
+   return bool, hkId
+end
+
+function module.unBlockNextHotKey(keys)
+   local result = false
+   local count = 0
+   while module.isBlockedHotKey(keys) do
+      local _, id = module.isBlockedHotKey(keys)
+      tHotKey[id] = nil
+      result = true
+      count = count + 1
+   end
+   local id = 1
+   for k, v in pairs(tBlockNext) do
+      tBlockNext[id] = v
+      id = id + 1
+   end
+   return result, count
+end
+
+function module.isKeyModified(id)
+   return (tModKeys[id] or false) or (tBlockKeys[id] or false)
+end
+
+function module.isModifiedDown()
+   local bool = false
+   for k, v in pairs(tModKeys) do
+      if isKeyDown(k) then
+         bool = true
+         break
+      end
+   end
+   return bool
+end
+
+lua_thread.create(function ()
+   while true do
+      wait(0)
+      local tDownKeys = module.getCurrentHotKey()
+      for k, v in pairs(tHotKey) do
+         if #v.keys > 0 then
+            local bool = true
+            for i = 1, #v.keys do
+               if i ~= #v.keys and (getKeyNum(v.keys[i]) > getKeyNum(v.keys[i + 1]) or getKeyNum(v.keys[i]) == 0) then
+                  bool = false
+                  break
+               elseif i == #v.keys and (v.pressed and not wasKeyPressed(v.keys[i]) or not v.pressed and not isKeyDown(v.keys[i])) or (#v.keys == 1 and module.isModifiedDown()) then
+                  bool = false
+                  break
+               end
+            end
+            if bool and ((module.onHotKey and module.onHotKey(k, v.keys) ~= false) or module.onHotKey == nil) then
+               local result, id = module.isBlockedHotKey(v.keys)
+               if not result then
+                  v.callback(k, v.keys)
+               else
+                  tBlockNext[id] = nil
+               end
+            end
+         end
+      end
+   end
+end)
+
+function module.registerHotKey(keys, pressed, callback)
+   tHotKey[#tHotKey + 1] = {keys = keys, pressed = pressed, callback = callback}
+   return true, #tHotKey
+end
+
+function module.getAllHotKey()
+   return tHotKey
+end
+
+function module.unRegisterHotKey(keys)
+
+   local result = false
+   local count = 0
+   while module.isHotKeyDefined(keys) do
+      local _, id = module.isHotKeyDefined(keys)
+      tHotKey[id] = nil
+      result = true
+      count = count + 1
+   end
+   local id = 1
+   local tNewHotKey = {}
+   for k, v in pairs(tHotKey) do
+      tNewHotKey[id] = v
+      id = id + 1
+   end
+   tHotKey = tNewHotKey
+   return result, count
+ 
+end
+
+function module.isHotKeyDefined(keys)
+   local bool, hkId = false, -1
+   for k, v in pairs(tHotKey) do
+      if module.isHotKeyHotKey(keys, v.keys) then
+         bool = true
+         hkId = k
+         break
+      end
+   end
+   return bool, hkId
+end
+
+function module.getKeysName(keys)
+   local tKeysName = {}
+   for k, v in ipairs(keys) do
+      tKeysName[k] = vkeys.id_to_name(v)
+   end
+   return tKeysName
+end
+
+function module.getCurrentHotKey(type)
+   local type = type or 0
+   local tCurKeys = {}
+   for k, v in pairs(vkeys) do
+      if tBlockKeys[v] == nil then
+         local num, down = getKeyNum(v), isKeyDown(v)
+         if down and num == 0 then
+            tKeyList[#tKeyList + 1] = v
+         elseif num > 0 and not down then
+            tKeyList[num] = nil
+         end
+      end
+   end
+   local i = 1
+   for k, v in pairs(tKeyList) do
+      tCurKeys[i] = type == 0 and v or vkeys.id_to_name(v)
+      i = i + 1
+   end
+   return tCurKeys
+end
+
+return module
+
+]]
+	local f = io.open(getWorkingDirectory().."/lib/rkeysFD.lua", "w")
+	f:write(textrkeys)
+	f:close()			
+end
+
 local nofiles = {}
 for i,v in ipairs(files) do
 	if not doesFileExist(getWorkingDirectory()..v) then
@@ -125,7 +339,7 @@ assert(res, "Библиотека Imgui не найдена")
 local res, fa = pcall(require, 'faIcons')
 assert(res, "Библиотека faIcons не найдена")
 -----------------------------------------
-local res, rkeys = pcall(require, 'rkeys')
+local res, rkeys = pcall(require, 'rkeysFD')
 assert(res, "Библиотека Rkeys не найдена")
 vkeys.key_names[vkeys.VK_RBUTTON] = "RBut"
 vkeys.key_names[vkeys.VK_XBUTTON1] = "XBut1"
@@ -255,11 +469,11 @@ function PlayerSet.name()
 	end
 end
 function PlayerSet.teg()
-	if buf_teg.v ~= "" then
-		return u8"(Позывной: "..buf_teg.v..u8")"
-	else
-		return u8""
-	end
+if buf_teg.v ~= "" then
+	return u8"(Позывной: "..buf_teg.v..u8")"
+else
+	return u8""
+end
 end
 function PlayerSet.org()
 	return chgName.org[num_org.v+1]
@@ -289,6 +503,7 @@ binder = {
 	sleep = imgui.ImFloat(0.5),
 	name = imgui.ImBuffer(256),
 	text = imgui.ImBuffer(51200),
+	cmd = imgui.ImBuffer(256),
 	key = {}
 }
 local helpd = {}
@@ -420,16 +635,9 @@ helpd.key = {
 	{k = "OEM_102", n = '> <'}
 }
 
---Sobes
-local sobes = {
-	input = imgui.ImBuffer(101),
-	player = {name = "", let = 0, zak = 0, work = "", bl = "", heal = "", narko = 0.1},
-	selID = imgui.ImBuffer(5),
-	logChat = {},
-	nextQ = false,
-	num = 0
-}
+
 -- buf_nick
+local errorspawn = false
 
 --edit main bind
 local buf_mainedit = imgui.ImBuffer(51200) 
@@ -905,6 +1113,7 @@ function main()
 				if #v.key > 0 then
 					binder.list[i].key = v.key
 					rkeys.registerHotKey(v.key, true, onHotKeyBIND)
+					sampRegisterChatCommand(v.cmd, function() binderCmdStart() end)
 					table.insert(keysList, v.key)
 				end
 			end
@@ -941,6 +1150,10 @@ function main()
 		sampRegisterChatCommand("mb", funCMD.memb)
 		sampRegisterChatCommand("post", funCMD.post)
 		sampRegisterChatCommand("ts", funCMD.time)
+		
+		for i,v in ipairs(binder.list) do
+			sampRegisterChatCommand(binder.list[i].cmd, function() binderCmdStart() end)
+		end
 		repeat wait(100) until sampIsLocalPlayerSpawned()
 		_, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
 		myNick = sampGetPlayerNickname(myid)
@@ -1002,7 +1215,28 @@ function main()
 		imgui.Process = mainWin.v or iconwin.v
   end
 end
- 
+function binderCmdStart()
+	local factCommand = sampGetChatInputText()
+	for i,v in ipairs(binder.list) do
+		local sverkaCommand = string.format("/%s", binder.list[i].cmd)
+		if sverkaCommand == factCommand then
+		local numberMassive = i
+		local nameMassive = binder.list[i].name
+		for k, v in pairs(binder.list) do
+			if thread:status() == "dead" then
+				thread = lua_thread.create(function()
+				local dir = dirml.."/FDHelper/Binder/bind-"..nameMassive..".txt"
+				local tb = {}
+				tb = strBinderTable(dir)
+				tb.sleep = binder.list[i].sleep
+				playBind(tb)
+				return end)	
+			end
+		end
+	end
+end
+end
+
 function HideDialog(bool)
 	lua_thread.create(function()
 		repeat wait(0) until sampIsDialogActive()
@@ -1023,17 +1257,22 @@ function mainSet()
 
 			if not imgui.IsItemActive() and buf_nick.v == "" then
 				imgui.SameLine()
-				ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Кевин Хатико")
+				ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Иван Иванов")
 				imgui.SameLine()
 				imgui.SetCursorPosX(30)
 				imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите Ваше Имя и Фамилию");
 			else
 			imgui.SameLine()
-			ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Кевин Хатико")
+			ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Иван Иванов")
 			end
-			if imgui.InputText(u8"Позывной ", buf_teg) then needSave = true end
-			imgui.SameLine(); ShowHelpMarker(u8"Позывной может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nИспользуется исключительно для отыгровок через переменную {myTag}.")
-			imgui.PushItemWidth(278);
+		if imgui.InputText(u8"Позывной ", buf_teg) then needSave = true end
+		if not imgui.IsItemActive() and buf_teg.v == "" then
+			imgui.SameLine()
+			imgui.SetCursorPosX(432)
+			imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите ваш позывной, если он есть");
+		end
+		imgui.SameLine(); ShowHelpMarker(u8"Позывной может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nИспользуется исключительно для отыгровок через переменную {myTag}.")
+		imgui.PushItemWidth(278);
 			imgui.PushStyleVar(imgui.StyleVar.FramePadding, imgui.ImVec2(1, 3))
 				if imgui.Button(fa.ICON_COG.."##1", imgui.ImVec2(21,20)) then
 					chgName.inp.v = chgName.org[num_org.v+1]
@@ -1123,7 +1362,7 @@ function imgui.OnDrawFrame()
 		local sw, sh = getScreenResolution()
 		imgui.SetNextWindowSize(imgui.ImVec2(850, 450), imgui.Cond.FirstUseEver)
 		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version, mainWin, imgui.WindowFlags.NoResize);
+		imgui.Begin(fa.ICON_FIRE .. " Fire Department Helper v"..scr.version..(newversion ~= scr.version and u8" (ЕСТЬ ОБНОВЛЕНИЕ)" or ""), mainWin, imgui.WindowFlags.NoResize);
 			--imgui.SetWindowFontScale(1.1)
 			--///// Func menu button
 			imgui.BeginChild("Main menu", imgui.ImVec2(155, 0), true)
@@ -1155,10 +1394,10 @@ function imgui.OnDrawFrame()
 					imgui.Spacing()
 				imgui.Separator()
 					imgui.Spacing()
-				if ButtonMenu(fa.ICON_QUESTION .. u8"  Помощь", select_menu[6]) then select_menu = {false, false, false, false, false, true, false} end
+				--[[if ButtonMenu(fa.ICON_QUESTION .. u8"  Помощь", select_menu[6]) then select_menu = {false, false, false, false, false, true, false} end
 					imgui.Spacing()
 				imgui.Separator()
-					imgui.Spacing()
+					imgui.Spacing()]]
 				if ButtonMenu(fa.ICON_SEARCH .. u8"  О скрипте", select_menu[7]) then select_menu = {false, false, false, false, false, false, true} end
 					imgui.Spacing()
 			imgui.EndChild();
@@ -1495,7 +1734,8 @@ function imgui.OnDrawFrame()
 									
 									binder.name.v = u8(binder.list[binder.select_bind].name)
 									binder.sleep.v = binder.list[binder.select_bind].sleep
-									binder.key = binder.list[binder.select_bind].key
+									binder.key = binder.list[binder.select_bind].key									
+									binder.cmd.v = u8(binder.list[binder.select_bind].cmd)
 									if doesFileExist(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt") then
 										local f = io.open(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt", "r")
 										binder.text.v = u8(f:read("*a"))
@@ -1520,6 +1760,7 @@ function imgui.OnDrawFrame()
 									binder.name.v = ""
 									binder.sleep.v = 0.5
 									binder.text.v = ""
+									binder.cmd.v = ""
 									binder.key = {}
 									break 
 								end
@@ -1535,11 +1776,168 @@ function imgui.OnDrawFrame()
 							imgui.SetCursorPosX(500)
 							imgui.Text(u8"Поле для заполнения")
 							imgui.PushStyleColor(imgui.Col.FrameBg, imgui.ImColor(70, 70, 70, 200):GetVec4())
-							imgui.InputTextMultiline("##bind", binder.text, imgui.ImVec2(525, 301))
+							imgui.InputTextMultiline("##bind", binder.text, imgui.ImVec2(525, 275))
 							imgui.PopStyleColor(1)
 							imgui.PushItemWidth(150)
 							imgui.InputText(u8"Название бинда", binder.name, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[%wа-Я%+%№%#%(%)]"))
 							
+							--[[imgui.TextColoredRGB("Текущая команда: /")
+							imgui.SameLine()
+							imgui.InputText(u8"##cmd", binder.cmd, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[%wа-Я%+%№%#%(%)]"))
+							---
+							if isHotKeyDefined then
+								imgui.SameLine()
+								imgui.TextColoredRGB("{FF0000}Данная команда уже существует!")
+							end
+							if russkieBukviNahyi then
+								imgui.SameLine()
+								imgui.TextColoredRGB("{FF0000}Нельзя использовать русские буквы!")
+							end
+							if dlinaStroki then
+								imgui.SameLine()
+								imgui.TextColoredRGB("{FF0000}Максимальная длина команды - 15 букв!")
+							end		
+							if binder.cmd.v:find("%A") then
+								russkieBukviNahyi = true
+								isHotKeyDefined = false
+								dlinaStroki = false
+								exits = true
+							elseif binder.cmd.v:len() > 15 then
+								dlinaStroki = true
+								russkieBukviNahyi = false
+								isHotKeyDefined = false
+								exits = true
+							end
+							for i,v in ipairs(cmdBind) do
+								if v.cmd == binder.cmd.v then
+									exits = true
+									isHotKeyDefined = true
+									russkieBukviNahyi = false
+									dlinaStroki = false
+								end
+							end
+							for i,v in ipairs(binder.list) do
+								if binder.list[i].cmd == binder.cmd.v and binder.cmd.v ~= binder.cmd.v and binder.cmd.v ~= "" then
+									exits = true
+									isHotKeyDefined = true
+									russkieBukviNahyi = false
+									dlinaStroki = false
+								end
+							end
+							---]]
+							if imgui.Button(u8"Задать команду", imgui.ImVec2(150, 20)) then 
+								chgName.inp.v = binder.cmd.v
+								unregcmd = chgName.inp.v
+								imgui.OpenPopup(u8"FDH | Редактирование команды бинда")
+								editKey = true
+							end
+							if imgui.BeginPopupModal(u8"FDH | Редактирование команды бинда", null, imgui.WindowFlags.AlwaysAutoResize + imgui.WindowFlags.NoMove) then
+								isHotKeyDefined = false
+								russkieBukviNahyi = false
+								dlinaStroki = false
+								editKey = false
+								unregcmd = ""
+								imgui.SetCursorPosX(70)
+								imgui.Text(u8"Введите новую команду на этот бинд, которую Вы пожелаете."); imgui.Separator()
+								imgui.Text(u8"Примечания:")
+								imgui.Bullet()	imgui.TextColoredRGB("{00ff8c}Разрешается заменять серверные команды.")
+								imgui.Bullet()	imgui.TextColoredRGB("{00ff8c}Если Вы замените серверную команду - Ваша команда станет приоритетной.")
+								imgui.Bullet()	imgui.TextColoredRGB("{00ff8c}Нельзя использовать цифры и символы. Только английские буквы.")
+								imgui.Text(u8"/");
+								imgui.SameLine();
+								imgui.PushItemWidth(520)
+								imgui.InputText(u8"##inpcastname", chgName.inp, 512, filter(1, "[%a]+"))
+								if isHotKeyDefined then
+									imgui.TextColoredRGB("{FF0000}[Ошибка]{FFFFFF} Данная команда уже существует!")
+								end
+								if russkieBukviNahyi then
+									imgui.TextColoredRGB("{FF0000}[Ошибка]{FFFFFF} Нельзя использовать русские буквы!")
+								end
+								if dlinaStroki then
+									imgui.TextColoredRGB("{FF0000}[Ошибка]{FFFFFF} Максимальная длина команды - 15 букв!")
+								end		
+								if select_menu[5] then
+									if imgui.Button(u8"Применить", imgui.ImVec2(174, 0)) then
+										local exits = false
+										if chgName.inp.v:find("%A") then
+											russkieBukviNahyi = true
+											isHotKeyDefined = false
+											dlinaStroki = false
+											exits = true
+										elseif chgName.inp.v:len() > 15 then
+											dlinaStroki = true
+											russkieBukviNahyi = false
+											isHotKeyDefined = false
+											exits = true
+										end
+										for i,v in ipairs(cmdBind) do
+											if v.cmd == chgName.inp.v then
+												exits = true
+												isHotKeyDefined = true
+												russkieBukviNahyi = false
+												dlinaStroki = false
+											end
+										end
+										for i,v in ipairs(binder.list) do
+											if binder.list[i].cmd == chgName.inp.v and chgName.inp.v ~= binder.cmd.v and chgName.inp.v ~= "" then
+												exits = true
+												isHotKeyDefined = true
+												russkieBukviNahyi = false
+												dlinaStroki = false
+											end
+										end
+										if not exits then
+											if binder.cmd.v == chgName.inp.v then
+												unregcmd = ""
+												isHotKeyDefined = false
+												russkieBukviNahyi = false
+												dlinaStroki = false
+												imgui.CloseCurrentPopup();
+												editKey = false
+											else
+												isHotKeyDefined = false
+												russkieBukviNahyi = false
+												dlinaStroki = false
+												binder.cmd.v = chgName.inp.v
+												imgui.CloseCurrentPopup();
+												editKey = false
+											end
+										end
+									end
+								end				
+								imgui.SameLine();
+								if imgui.Button(u8"Закрыть", imgui.ImVec2(174, 0)) then 
+									imgui.CloseCurrentPopup(); 
+									currentKey = {"",{}}
+									cb_RBUT.v = false
+									cb_x1.v, cb_x2.v = false, false
+									lockPlayerControl(false)
+									isHotKeyDefined = false
+									russkieBukviNahyi = false
+									dlinaStroki = false
+									editKey = false
+									unregcmd = ""
+								end 
+								imgui.SameLine()
+								if select_menu[5] then
+									if imgui.Button(u8"Очистить строку", imgui.ImVec2(174, 0)) then
+										chgName.inp.v = ""
+										isHotKeyDefined = false
+										russkieBukviNahyi = false
+										dlinaStroki = false
+									end
+								end
+							imgui.EndPopup()
+						end
+							imgui.SetCursorPosX(50)
+							if binder.cmd.v == "" then
+								imgui.SameLine()
+								imgui.TextColoredRGB("Текущая команда: {F02626}Отсутствует")
+							else
+								imgui.SameLine()
+								imgui.TextColoredRGB("Текущая команда: {1AEB1D}/"..binder.cmd.v)
+							end
+							---
 							if imgui.Button(u8"Назначить клавишу", imgui.ImVec2(150, 20)) then 
 								imgui.OpenPopup(u8"FDH | Установка клавиши для активации")
 								editKey = true
@@ -1559,7 +1957,8 @@ function imgui.OnDrawFrame()
 								binder.text.v = ""
 								binder.sleep.v = 0.5
 								binder.name.v = ""
-								
+								sampUnregisterChatCommand(binder.cmd.v)
+								binder.cmd.v = ""
 								binder.edit = false 
 								rkeys.unRegisterHotKey(binder.key)
 								unRegisterHotKey(binder.key)
@@ -1592,8 +1991,13 @@ function imgui.OnDrawFrame()
 									binder.list[binder.select_bind].key = binder.key
 									local sec = string.format("%.1f", binder.sleep.v)
 									binder.list[binder.select_bind].sleep = sec
+									binder.list[binder.select_bind].cmd = binder.cmd.v:gsub("/","")
+									sampUnregisterChatCommand(unregcmd)
 									local text = u8:decode(binder.text.v)
 									local saveJS = encodeJson(binder.list) 
+									for i,v in ipairs(binder.list) do
+										sampRegisterChatCommand(binder.list[i].cmd, function() binderCmdStart() end)
+									end
 									local f = io.open(dirml.."/FDHelper/bindSetting.fd", "w")
 									local ftx = io.open(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt", "w")
 									f:write(saveJS)
@@ -1607,7 +2011,7 @@ function imgui.OnDrawFrame()
 							imgui.SameLine()
 							if imgui.Button(u8"Тег-функции", imgui.ImVec2(127, 20)) then paramWin.v = not paramWin.v end
 							imgui.SameLine()
-							if imgui.Button(u8"Расширенные функционал", imgui.ImVec2(127, 20)) then profbWin.v = not profbWin.v end
+							if imgui.Button(u8"Расширенные", imgui.ImVec2(127, 20)) then profbWin.v = not profbWin.v end
 							
 							
 						else
@@ -1657,10 +2061,8 @@ function imgui.OnDrawFrame()
 				imgui.SameLine()
 				imgui.BeginChild("about", imgui.ImVec2(0, 0), true)
 					imgui.SetCursorPosX(280)
-					imgui.Text(u8"Кратко о фракции")
+					imgui.Text(u8"Информация о скрипте")
 					imgui.Spacing()
-					imgui.TextWrapped(u8"\tДобро пожаловать в Пожарный департамент.\nСами вы его выбрали, или его выбрали за вас — это лучшая фракция из всех.\n\n\nПовышения до 5 ранга через /wbook. Выше 5го зависит от вашего лидера.")
-					imgui.Dummy(imgui.ImVec2(0, 10))
 					
 						imgui.Dummy(imgui.ImVec2(0, 40))
 						imgui.SetCursorPosX(20)
@@ -1671,11 +2073,6 @@ function imgui.OnDrawFrame()
 							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") end
 							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
 						
-						imgui.SameLine()
-						imgui.TextColoredRGB("и на {74BAF4}Сайте")
-							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-							if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru/fdh") end
-							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://romanespit.ru/fdh', nil, nil, 1)) end
 					imgui.Bullet()
 					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Консерва с 07)")
 					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
@@ -1701,13 +2098,13 @@ function imgui.OnDrawFrame()
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
 						if imgui.Button(fa.ICON_WRENCH..u8" Перезагрузить скрипт", imgui.ImVec2(180, 30)) then showCursor(false); scr:reload() end
-						
-						
+											
 						imgui.EndChild()
 			end
 
-			--///Установка клавиши
+			--///Установка клавиши и кмд
 				imgui.PushStyleColor(imgui.Col.PopupBg, imgui.ImVec4(0.06, 0.06, 0.06, 0.94))
+				
 				if imgui.BeginPopupModal(u8"FDH | Установка клавиши для активации", null, imgui.WindowFlags.AlwaysAutoResize + imgui.WindowFlags.NoMove) then
 					
 					imgui.Text(u8"Нажмите на клавишу или сочетание клавиш для установки активации."); imgui.Separator()
@@ -2384,7 +2781,7 @@ function onHotKeyCMD(id, keys)
 	end
 end
 
-local function strBinderTable(dir)
+--[[local function strBinderTable(dir)
 	local tb = {
 		vars = {},
 		bind = {},
@@ -2456,8 +2853,80 @@ local function strBinderTable(dir)
 		return tb
 	end 
 end
-
-local function playBind(tb)
+]]
+function strBinderTable(dir)
+	local tb = {
+		vars = {},
+		bind = {},
+		debug = {
+			file = true,
+			close = {}
+		},
+		sleep = 1000
+	}
+	if doesFileExist(dir) then
+		local l = {{},{},{},{},{}}
+		local f1 = io.open(dir)
+		local t = {}
+		local ln = 0
+		for line in f1:lines() do
+			if line:find("^//.*$") then
+				line = ""
+			elseif line:find("//.*$") then
+				line = line:match("(.*)//")
+			end
+			ln = ln + 1
+			if #t > 0 then
+				if line:find("%[name%]=(.*)$") then
+					t[#t].name = line:match("%[name%]=(.*)$")
+				elseif line:find("%[[%a%d]+%]=(.*)$") then
+					local k, n = line:match("%[([%d%a]+)%]=(.*)$")
+					local nk = vkeys["VK_"..k:upper()]
+					if nk then
+						local a = {n = n, k = nk, kn = k:upper(), t = {}}
+						table.insert(t[#t].var, a)
+					end
+				elseif line:find("{dialogEnd}") then
+					if #t > 1 then
+						local a = #t[#t-1].var
+						table.insert(t[#t-1].var[a].t, t[#t])
+						t[#t] = nil
+					elseif #t == 1 then
+						table.insert(tb.bind, t[1])
+						t = {}
+					end
+					table.remove(tb.debug.close)
+				elseif line:find("{dialog}") then
+					local b = {}
+					b.name = ""
+					b.var = {}
+					table.insert(tb.debug.close, ln)
+					table.insert(t, b)
+				elseif #line > 0 and #t[#t].var > 0 then
+					local a = #t[#t].var
+					table.insert(t[#t].var[a].t, line)
+				end
+			else
+				if line:find("{dialog}") and #t == 0 then
+					local b = {} 
+					b.name = ""
+					b.var = {}
+					table.insert(t, b)
+					table.insert(tb.debug.close, ln)
+				end
+				if #tb.debug.close == 0 and #line > 0 then 
+					table.insert(tb.bind, line)
+				end
+			end
+		end
+		f1:close()
+		return tb
+	else
+		tb.debug.file = false
+		return tb
+	end 
+end
+--[[function playBind(tb)
 	if not tb.debug.file or #tb.debug.close > 0 then
 		if not tb.debug.file then
 			sampAddChatMessage(SCRIPT_PREFIX.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
@@ -2526,7 +2995,80 @@ local function playBind(tb)
 	end					
 	pairsT(tb.bind, tb.vars)
 end
-
+]]
+function playBind(tb)
+	if not tb.debug.file or #tb.debug.close > 0 then
+		if not tb.debug.file then
+			sampAddChatMessage(SCRIPT_PREFIX.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
+		elseif #tb.debug.close > 0 then
+			sampAddChatMessage(SCRIPT_PREFIX.."Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", SCRIPT_COLOR)
+		end
+		addOneOffSound(0, 0, 0, 1058)
+		return false
+	end
+	function pairsT(t, var)
+		for i, line in ipairs(t) do
+			if type(line) == "table" then
+				renderT(line, var)
+			else
+				if line:find("{pause}") then
+					local len = renderGetFontDrawTextLength(font, "{FFFFFF}[{67E56F}Enter{FFFFFF}] - Продолжить")
+					while true do
+						wait(0)
+						if not isGamePaused() then
+							renderFontDrawText(font, "Ожидание...\n{FFFFFF}[{67E56F}Enter{FFFFFF}] - Продолжить", sx-len-10, sy-50, 0xFFFFFFFF)
+							if isKeyJustPressed(VK_RETURN) and not sampIsChatInputActive() and not sampIsDialogActive() then break end
+						end
+					end
+				elseif line:find("{sleep:%d+}") then
+					btime = tonumber(line:match("{sleep:(%d+)}"))
+				elseif line:find("^%#[%d%a]+=.*$") then
+					local var, val = line:match("^%#([%d%a]+)=(.*)$")
+					tb.vars[var] = tags(val)			
+				else
+					wait(i == 1 and 0 or btime or tb.sleep*1000)
+					btime = nil
+					local str = line
+					if var then
+						for k,v in pairs(var) do
+							str = str:gsub("#"..k, v)
+						end
+					end
+					if str:find("/") then
+						sampProcessChatInput(tags(str))
+					else
+						sampSendChat(tags(str))
+					end
+				end
+			end
+		end
+	end
+	function renderT(t, var)
+		local render = true
+		local len = renderGetFontDrawTextLength(font, t.name)
+		for i,v in ipairs(t.var) do
+			local str = string.format("{FFFFFF}[{67E56F}%s{FFFFFF}] - %s", v.kn, v.n)
+			if len < renderGetFontDrawTextLength(font, str) then
+				len = renderGetFontDrawTextLength(font, str)
+			end
+		end
+		repeat
+			wait(0)
+			if not isGamePaused() then
+				renderFontDrawText(font, t.name, sx-10-len, sy-#t.var*25-30, 0xFFFFFFFF)
+				for i,v in ipairs(t.var) do
+					local str = string.format("{FFFFFF}[{67E56F}%s{FFFFFF}] - %s", v.kn, v.n)
+					renderFontDrawText(font, str, sx-10-len, sy-#t.var*25-30+(25*i), 0xFFFFFFFF)
+					if isKeyJustPressed(v.k) and not sampIsChatInputActive() and not sampIsDialogActive() then
+						pairsT(v.t, var)
+						render = false
+					end
+				end
+			end
+		until not render						
+	end					
+	pairsT(tb.bind, tb.vars)
+end
 function onHotKeyBIND(id, keys)
 	if thread:status() == "dead" then
 		local sKeys = tostring(table.concat(keys, " "))
@@ -2785,7 +3327,7 @@ function funCMD.uwarn(id)
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
-	if num_rank.v+1 < 9 then
+	if num_rank.v+1 < 8 then
 		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
@@ -2930,7 +3472,7 @@ function funCMD.umute(id)
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
-	if num_rank.v+1 < 9 then
+	if num_rank.v+1 < 8 then
 		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
@@ -2998,9 +3540,49 @@ end
 
 
 function hook.onServerMessage(mesColor, mes) -- HOOK
-		
+	if mes:find("Con_Serve(.+):(.+)vizov1488fd") then
+		if mes:find("Con_Serve(.+){B7AFAF}") then
+			local staps = 0
+			sampShowDialog(2001, "Подтверждение", "Это сообщение подтверждает, что к Вам обращается официальный\n                 разработчик скрипта FD Helper - "..COLOR_SECONDARY.."romanespit", "Закрыть", "", 0)
+			sampAddChatMessage(SCRIPT_PREFIX.."Это сообщение подтверждает, что к Вам обращается разрабочик FD Helper - "..COLOR_SECONDARY.."romanespit", 0xFF8FA2)
+			lua_thread.create(function()
+				repeat wait(200)
+					addOneOffSound(0, 0, 0, 1057)
+					staps = staps + 1
+					until staps > 10
+			end)
+			return false
+		end
+	end
+	--[[if mes:find("%[D%](.+)ФД(.+)связь") and prikol.v then
+		local stap = 0
+		lua_thread.create(function()
+			wait(300)
+			sampAddChatMessage(SCRIPT_PREFIX.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
+			sampAddChatMessage(SCRIPT_PREFIX.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
+			repeat wait(200) 
+				addOneOffSound(0, 0, 0, 1057)
+				stap = stap + 1
+			until stap > 10
+		end)
+	end
+	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
+		if not errorspawn then
+			local stap = 0
+			lua_thread.create(function()
+				errorspawn = true
+				repeat wait(200) 
+					addOneOffSound(0, 0, 0, 1057)
+					stap = stap + 1
+				until stap > 15
+				wait(62000)
+				errorspawn = false
+			end)
+		end
+	end]]
 	if cb_chat2.v then
-		if mes:find("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") or mes:find("- Основные команды сервера: /menu /help /gps /settings") or mes:find("- Пригласи друга и получи бонус в размере $250 000!") or mes:find("- Донат и получение дополнительных средств arizona-rp.com/donate") or mes:find("Подробнее об обновлениях сервера") or mes:find("Радио Аризона, прямые эфиры") then 
+		if mes:find("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") or mes:find("- Основные команды сервера: /menu /help /gps /settings") or mes:find("Пригласи друга и получи бонус в размере") or mes:find("- Донат и получение дополнительных средств arizona-rp.com/donate") or mes:find("Подробнее об обновлениях сервера") or mes:find("(Личный кабинет/Донат)") or mes:find("С помощью телефона можно заказать") or mes:find("В нашем магазине ты можешь") or mes:find("их на желаемый тобой {FFFFFF}бизнес") or mes:find("Игроки со статусом {FFFFFF}VIP{6495ED} имеют большие возможности") or mes:find("можно приобрести редкие {FFFFFF}автомобили, аксессуары, воздушные") 
+		or mes:find("предметы, которые выделят тебя из толпы! Наш сайт:") or mes:find("Вы можете купить складское помещение") or mes:find("Таким образом вы можете сберечь своё имущество, даже если вас забанят.") or mes:find("Этот тип недвижимости будет навсегда закреплен за вами и за него не нужно платить.") or mes:find("{ffffff}Уважаемые жители штата, открыта продажа билетов на рейс:") or mes:find("{ffffff}Подробнее: {FF6666}/help — Перелёты в город Vice City.") or mes:find("{ffffff}Внимание! На сервере Vice City действует акция Х3 PayDay.") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут бесплатно раз в день получать") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут получать (.+) Ларца Олигарха") then 
 			return false
 		end
 	end
@@ -3255,7 +3837,6 @@ function postGet(sel)
 		end
 	return false, postname, coord
 end
-
 
 addEventHandler('onWindowMessage', function(msg, key)
     if (mainWin.v) then

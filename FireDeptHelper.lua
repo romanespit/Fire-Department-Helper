@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.6")
+script_version("1.3.0")
 script_properties("work-in-pause")
 setver = 1
  
@@ -3547,20 +3547,7 @@ end
 
 
 function hook.onServerMessage(mesColor, mes) -- HOOK
-	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
-		if not errorspawn then
-			local stap = 0
-			lua_thread.create(function()
-				errorspawn = true
-				repeat wait(200) 
-					addOneOffSound(0, 0, 0, 1057)
-					stap = stap + 1
-				until stap > 15
-				wait(62000)
-				errorspawn = false
-			end)
-		end
-	end
+	
 	if mes:find("Con_Serve(.+):(.+)vizov1488fd") then
 		if mes:find("Con_Serve(.+){B7AFAF}") then
 			local staps = 0
@@ -3575,7 +3562,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	if mes:find("%[D%](.+)ФД(.+)связь") and prikol.v then
+	--[[if mes:find("%[D%](.+)ФД(.+)связь") and prikol.v then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
@@ -3587,6 +3574,20 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			until stap > 10
 		end)
 	end
+	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
+		if not errorspawn then
+			local stap = 0
+			lua_thread.create(function()
+				errorspawn = true
+				repeat wait(200) 
+					addOneOffSound(0, 0, 0, 1057)
+					stap = stap + 1
+				until stap > 7
+				wait(62000)
+				errorspawn = false
+			end)
+		end
+	end]]
 	if cb_chat2.v then
 		if mes:find("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") or mes:find("- Основные команды сервера: /menu /help /gps /settings") or mes:find("Пригласи друга и получи бонус в размере") or mes:find("- Донат и получение дополнительных средств arizona-rp.com/donate") or mes:find("Подробнее об обновлениях сервера") or mes:find("(Личный кабинет/Донат)") or mes:find("С помощью телефона можно заказать") or mes:find("В нашем магазине ты можешь") or mes:find("их на желаемый тобой {FFFFFF}бизнес") or mes:find("Игроки со статусом {FFFFFF}VIP{6495ED} имеют большие возможности") or mes:find("можно приобрести редкие {FFFFFF}автомобили, аксессуары, воздушные") 
 		or mes:find("предметы, которые выделят тебя из толпы! Наш сайт:") or mes:find("Вы можете купить складское помещение") or mes:find("Таким образом вы можете сберечь своё имущество, даже если вас забанят.") or mes:find("Этот тип недвижимости будет навсегда закреплен за вами и за него не нужно платить.") or mes:find("{ffffff}Уважаемые жители штата, открыта продажа билетов на рейс:") or mes:find("{ffffff}Подробнее: {FF6666}/help — Перелёты в город Vice City.") or mes:find("{ffffff}Внимание! На сервере Vice City действует акция Х3 PayDay.") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут бесплатно раз в день получать") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут получать (.+) Ларца Олигарха") then 
