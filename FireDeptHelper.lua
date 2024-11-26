@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.2.4")
+script_version("1.2.5")
 script_properties("work-in-pause")
 setver = 1
  
@@ -34,6 +34,8 @@ local sampfuncsNot = [[
 О том как внести в исключение папку воспользуйтесь интернетом.
 3. Произведите повторную установку скрипта.
 
+По проблемам заводите issue на GitHub. Ссылка есть на сайте: https://romanespit.ru/fdh
+
 Игра была свернута, поэтому можете продолжить играть. 
 ]]
 
@@ -51,6 +53,8 @@ local errorText = [[
 Защитник Windows, McAfree, Avast, 360 Total и другие.
 О том как внести в исключение папку воспользуйтесь интернетом.
 3. Произведите повторную установку скрипта.
+
+По проблемам заводите issue на GitHub. Ссылка есть на сайте: https://romanespit.ru/fdh
 
 Игра была свернута, поэтому можете продолжить играть. 
 ]]
@@ -251,6 +255,13 @@ function PlayerSet.name()
 	else
 		return u8"Не указаны"
 	end
+end
+function PlayerSet.teg()
+if buf_teg.v ~= "" then
+	return u8"(Позывной: "..buf_teg.v..u8")"
+else
+	return u8""
+end
 end
 function PlayerSet.org()
 	return chgName.org[num_org.v+1]
@@ -1011,7 +1022,7 @@ function mainSet()
 	imgui.SetCursorPosX(25)
 	imgui.BeginGroup()
 	imgui.PushItemWidth(300);
-		if imgui.InputText(u8"Имя и Фамилия: ", buf_nick, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[а-Я%s]+")) then needSave = true end
+		if imgui.InputText(u8"Имя и Фамилия ", buf_nick, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[а-Я%s]+")) then needSave = true end
 
 			if not imgui.IsItemActive() and buf_nick.v == "" then
 				imgui.SameLine()
@@ -1023,8 +1034,8 @@ function mainSet()
 			imgui.SameLine()
 			ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Кевин Хатико")
 			end
-		if imgui.InputText(u8"Тег в рацию ", buf_teg) then needSave = true end
-		imgui.SameLine(); ShowHelpMarker(u8"Тег для рации может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nПример: [Ваш Тег]")
+		if imgui.InputText(u8"Позывной ", buf_teg) then needSave = true end
+		imgui.SameLine(); ShowHelpMarker(u8"Позывной может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nИспользуется исключительно для отыгровок через переменную {myTag}.")
 		imgui.PushItemWidth(278);
 			imgui.PushStyleVar(imgui.StyleVar.FramePadding, imgui.ImVec2(1, 3))
 				if imgui.Button(fa.ICON_COG.."##1", imgui.ImVec2(21,20)) then
@@ -1170,6 +1181,8 @@ function imgui.OnDrawFrame()
 					imgui.Text(fa.ICON_ADDRESS_CARD .. u8"  Имя Фамилия сотрудника: ");
 						imgui.SameLine();
 						imgui.TextColored(colorInfo, PlayerSet.name())
+						imgui.SameLine();
+						imgui.TextColored(colorInfo, PlayerSet.teg())
 						imgui.Dummy(imgui.ImVec2(0, 5))
 					imgui.Text(fa.ICON_HOSPITAL_O .. u8"  Состоит в организации: ");
 						imgui.SameLine();
@@ -1662,10 +1675,10 @@ function imgui.OnDrawFrame()
 							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
 						
 						imgui.SameLine()
-						imgui.TextColoredRGB(" и в {74BAF4}Telegram")
+						imgui.TextColoredRGB("и на {74BAF4}Сайте")
 							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-							if imgui.IsItemClicked(0) then setClipboardText("https://t.me/ArzFDHelper") end
-							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://t.me/ArzFDHelper', nil, nil, 1)) end
+							if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru/fdh") end
+							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://romanespit.ru/fdh', nil, nil, 1)) end
 					imgui.Bullet()
 					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Консерва с 07)")
 					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
@@ -1902,7 +1915,7 @@ function imgui.OnDrawFrame()
 		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myTag}")
 		imgui.SameLine()
 		if imgui.IsItemClicked(0) then setClipboardText("{myTag}") end
-		imgui.TextColoredRGB("{C1C1C1} - Ваш тег  - {ACFF36}"..tostring(u8:decode(buf_teg.v)))
+		imgui.TextColoredRGB("{C1C1C1} - Ваш позывной  - {ACFF36}"..tostring(u8:decode(buf_teg.v)))
 		
 		imgui.Spacing()		
 		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myRank}")
@@ -2292,11 +2305,7 @@ function onHotKeyCMD(id, keys)
 					mainWin.v = not mainWin.v
 				elseif k == 2 then
 					sampSetChatInputEnabled(true)
-					if buf_teg.v ~= "" then
-						sampSetChatInputText("/r "..u8:decode(buf_teg.v)..": ")
-					else
-						sampSetChatInputText("/r ")
-					end
+					sampSetChatInputText("/r ")
 				elseif k == 3 then
 					sampSetChatInputEnabled(true)
 					sampSetChatInputText("/rb ")
@@ -2735,7 +2744,8 @@ function funCMD.post()
 		sampSetDialogClientside(false)
 	elseif bool then
 		thread = lua_thread.create(function()
-			sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
+			if not u8:decode(buf_teg.v) then sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
+			else sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_teg.v), post)) end
 			if tonumber(post:match("%d+")) >= 3 and tonumber(post:match("%d+")) <= 5 then
 				local veh = getAllVehicles()
 				local counter = 0
@@ -3072,7 +3082,7 @@ function hook.onSendDialogResponse(id, but, list)
 end
 function hook.onShowDialog(id, style, title, button1, button2, text)
 	if id == 1214 and spawnCars then
-		sampSendDialogResponse(id, 1, 2)
+		sampSendDialogResponse(id, 1, 3)
 		spawnCars = false
 		sampCloseCurrentDialogWithButton(0)
 		return false
