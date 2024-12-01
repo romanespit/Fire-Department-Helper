@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.0-noAutoUpdate")
+script_version("1.3.0-hotfix-noAutoUpdate")
 script_properties("work-in-pause")
 setver = 1
  
@@ -1734,8 +1734,8 @@ function imgui.OnDrawFrame()
 									
 									binder.name.v = u8(binder.list[binder.select_bind].name)
 									binder.sleep.v = binder.list[binder.select_bind].sleep
-									binder.key = binder.list[binder.select_bind].key									
-									binder.cmd.v = u8(binder.list[binder.select_bind].cmd)
+									binder.key = binder.list[binder.select_bind].key
+									binder.cmd.v = (binder.list[binder.select_bind].cmd ~= nil and u8(binder.list[binder.select_bind].cmd) or "")
 									if doesFileExist(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt") then
 										local f = io.open(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt", "r")
 										binder.text.v = u8(f:read("*a"))
@@ -3554,7 +3554,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	if mes:find("%[D%](.+)װִ(.+)סגÿחü") then
+	if mes:find("%[D%](.+)%s-%s%[װִ%](.+)סגÿחü") then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
