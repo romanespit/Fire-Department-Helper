@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.0-hotfix")
+script_version("1.3.1")
 script_properties("work-in-pause")
 setver = 1
  
@@ -390,7 +390,6 @@ local select_menu = {true, false, false, false, false, false, false} -- для пере
 
 
 
-
 local setting = {
 	nick = "",
 	teg = "",
@@ -636,7 +635,142 @@ helpd.key = {
 	{k = "OEM_8", n = '! §'},
 	{k = "OEM_102", n = '> <'}
 }
-
+-- Fires
+local FireList = {
+	{stars = 1, name = "Пожар в жилом доме Лас Вентурасе", posx = 2538.2687988281, posy = 1221.0397949219, posz = 11.105424880981},
+	{stars = 1, name = "Возгорание магазина в пустыне", posx = -792.05474853516, posy = 1501.5654296875, posz = 23.105772018433},
+	{stars = 1, name = "Возгорание в квартире в Сан Фиерро (взрыв газа)", posx = -2447.0671386719, posy = 47.022090911865, posz = 37.931632995605},
+	{stars = 1, name = "Пожар на складе в Форт Карсоне", posx = -142.46435546875, posy = 1079.3983154297, posz = 19.323354721069},
+	{stars = 1, name = "Пожар в мастерской Лас Вентураса", posx = 1640.8282470703, posy = 2197.4204101563, posz = 11.869663238525},
+	{stars = 1, name = "Пожар в магазинах Лос Сантоса", posx = 997.81427001953, posy = -1300.5013427734, posz = 13.449513435364},
+	{stars = 1, name = "Крушение бизнес джета в аэропорту Сан Фиерро", posx = -1283.4968261719, posy = 129.17262268066, posz = 13.603804588318},
+	{stars = 1, name = "Возгорание церкви в Лас Вентурасе", posx = 2529.5080566406, posy = 2023.5382080078, posz = 10.674548149109},
+	{stars = 2, name = "Пожар на заводе в Монтгомери", posx = 1324.8366699219, posy = 274.08764648438, posz = 20.182767868042},
+	{stars = 2, name = "Пожар в ангаре Лас Вентураса", posx = 1723.4230957031, posy = 750.02355957031, posz = 11.337490081787},
+	{stars = 2, name = "Возгорание амбара на ферме", posx = -96.602340698242, posy = -40.57186126709, posz = 3.1035149097443},
+	{stars = 2, name = "Возгорание жилого дома в ЛС	", posx = 2353.8603515625, posy = -1790.7845458984, posz = 13.433568000793},
+	{stars = 2, name = "Возгорание овощебазы около Паломино Крик", posx = 1934.2730712891, posy = 176.41770935059, posz = 35.873531341553},
+	{stars = 3, name = "Возгорание отделения полиции ЛС	", posx = 1554.5328369141, posy = -1679.3986816406, posz = 15.995138168335},
+	{stars = 3, name = "Пожар на заброшенной ферме	", posx = -1440.6533203125, posy = -1526.1088867188, posz = 101.05674743652},
+	{stars = 3, name = "Большой пожар на стройке в Лас Вентурасе", posx = 2408.8427734375, posy = 1922.2979736328, posz = 12.096800804138},
+}
+-- Areas
+local CountyName = {
+	{ name="Las Venturas", color="{FF7F00}", minx=863.9375, miny=608, maxx=2999.9375, maxy=3000 },
+	{ name="Bone County", color="{7FFF00}", minx=-613.09375, miny=461, maxx=863.90625, maxy=3000 },
+	{ name="Tierra Robada", color="{FFFF00}", minx=-3000, miny=1793, maxx=-612, maxy=3000 },
+	{ name="Tierra Robada", color="{FFFF00}", minx=-1759.10400390625, miny=1627, maxx=-613.10400390625, maxy=1793 },
+	{ name="Tierra Robada", color="{FFFF00}", minx=-1241.1040649414062, miny=626.9999542236328, maxx=-613.1040649414062, maxy=1626.9999542236328 },
+	{ name="Red County", color="{FF0000}", minx=863.9375, miny=461, maxx=2999.9375, maxy=608 },
+	{ name="Red County", color="{FF0000}", minx=-986.015625, miny=-332, maxx=3000, maxy=461 },
+	{ name="Red County", color="{FF0000}", minx=-251.015625, miny=-740.984375, maxx=2999.984375, maxy=-331.984375 },
+	{ name="Los Santos", color="{00FF00}", minx=48.96875, miny=-2999.96875, maxx=3000.03125, maxy=-740.96875 },
+	{ name="San Fierro", color="{007FFF}", minx=-3000, miny=1626, maxx=-1759, maxy=1793 },
+	{ name="San Fierro", color="{007FFF}", minx=-3000, miny=-700.9921875, maxx=-1241, maxy=1626.0078125 },
+	{ name="San Fierro", color="{007FFF}", minx=-1241.125, miny=-331, maxx=-987.125, maxy=627 },
+	{ name="Tierra Robada", color="{FFFF00}", minx=-986.09375, miny=460, maxx=-613.09375, maxy=627 },
+	{ name="San Fierro", color="{007FFF}", minx=-1241, miny=-398, maxx=-993, maxy=-331 },
+	{ name="San Fierro", color="{007FFF}", minx=-1241, miny=-482.00018310546875, maxx=-1132, maxy=-398.00018310546875 },
+	{ name="San Fierro", color="{007FFF}", minx=-1241, miny=-560.0001831054688, maxx=-1157, maxy=-482.00018310546875 },
+	{ name="San Fierro", color="{007FFF}", minx=-1241, miny=-701.0001831054688, maxx=-1197, maxy=-560.0001831054688 },
+	{ name="San Fierro", color="{007FFF}", minx=-3000, miny=-889.984375, maxx=-1783, maxy=-700.984375 },
+	{ name="San Fierro", color="{007FFF}", minx=-2235, miny=-1010.9765625, maxx=-1783, maxy=-889.9765625 },
+	{ name="San Fierro", color="{007FFF}", minx=-2193, miny=-1081.9609375, maxx=-1783, maxy=-1010.9609375 },
+	{ name="San Fierro", color="{007FFF}", minx=-2129.0078125, miny=-1156.95703125, maxx=-1783.0078125, maxy=-1081.95703125 },
+	{ name="San Fierro", color="{007FFF}", minx=-2083.0234375, miny=-1232.953125, maxx=-1783.0234375, maxy=-1156.953125 },
+	{ name="San Fierro", color="{007FFF}", minx=-2043.02734375, miny=-1298.953125, maxx=-1783.02734375, maxy=-1232.953125 },
+	{ name="San Fierro", color="{007FFF}", minx=-1999.00390625, miny=-1345.94921875, maxx=-1783.00390625, maxy=-1298.94921875 },
+	{ name="Flint County", color="{00FF7F}", minx=-993.0250244140625, miny=-741.0001525878906, maxx=-251.0250244140625, maxy=-332.0001525878906 },
+	{ name="Flint County", color="{00FF7F}", minx=-1132.0000305175781, miny=-482.0001525878906, maxx=-993.0000305175781, maxy=-398.0001525878906 },
+	{ name="Flint County", color="{00FF7F}", minx=-1157, miny=-560, maxx=-993, maxy=-482 },
+	{ name="Flint County", color="{00FF7F}", minx=-1197, miny=-701, maxx=-993, maxy=-560 },
+	{ name="Flint County", color="{00FF7F}", minx=-1783, miny=-1486.984375, maxx=-993, maxy=-700.984375 },
+	{ name="San Fierro", color="{007FFF}", minx=-1966.6364135742188, miny=-1387.94873046875, maxx=-1783.6364135742188, maxy=-1345.94873046875 },
+	{ name="San Fierro", color="{007FFF}", minx=-1924.3333129882812, miny=-1426.9479217529297, maxx=-1783.3333129882812, maxy=-1387.9479217529297 },
+	{ name="San Fierro", color="{007FFF}", minx=-1882.9999389648438, miny=-1486.9479370117188, maxx=-1782.9999389648438, maxy=-1426.9479370117188 },
+	{ name="Flint County", color="{00FF7F}", minx=-1211.28125, miny=-2999.9765625, maxx=48.71875, maxy=-1486.9765625 },
+	{ name="Flint County", color="{00FF7F}", minx=-993.03125, miny=-1487, maxx=48.96875, maxy=-741 },
+	{ name="Flint County", color="{00FF7F}", minx=-1768.73583984375, miny=-1557.9797668457031, maxx=-1211.73583984375, maxy=-1486.9797668457031 },
+	{ name="Flint County", color="{00FF7F}", minx=-1689.2926635742188, miny=-1673.9741516113281, maxx=-1211.2926635742188, maxy=-1557.9741516113281 },
+	{ name="Flint County", color="{00FF7F}", minx=-1372.7301635742188, miny=-1739.9685668945312, maxx=-1211.7301635742188, maxy=-1673.9685668945312 },
+	{ name="Flint County", color="{00FF7F}", minx=-1322.2926635742188, miny=-1839.962890625, maxx=-1211.2926635742188, maxy=-1739.962890625 },
+	{ name="Whetstone", color="{FF007F}", minx=-3000, miny=-3000.015625, maxx=-2235, maxy=-889.984375 },
+	{ name="Whetstone", color="{FF007F}", minx=-2235, miny=-2999.96875, maxx=-2193, maxy=-1010.96875 },
+	{ name="Whetstone", color="{FF007F}", minx=-2192.9999389648438, miny=-3000.0179290771484, maxx=-2128.9999389648438, maxy=-1081.9554290771484 },
+	{ name="Whetstone", color="{FF007F}", minx=-2129.03125, miny=-3000, maxx=-2083.03125, maxy=-1156.9375 },
+	{ name="Whetstone", color="{FF007F}", minx=-2083.0450859069824, miny=-3000.0037536621094, maxx=-1966.0450859069824, maxy=-1345.9412536621094 },
+	{ name="Whetstone", color="{FF007F}", minx=-2083.031219482422, miny=-1346.947998046875, maxx=-2042.0312194824219, maxy=-1232.947998046875 },
+	{ name="Whetstone", color="{FF007F}", minx=-2042.03125, miny=-1346.953125, maxx=-1998.03125, maxy=-1298.953125 },
+	{ name="Whetstone", color="{FF007F}", minx=-1966.640625, miny=-3000.0107421875, maxx=-1923.640625, maxy=-1387.9482421875 },
+	{ name="Whetstone", color="{FF007F}", minx=-1924.3333282470703, miny=-2999.9479217529297, maxx=-1883.3333282470703, maxy=-1426.9479217529297 },
+	{ name="Whetstone", color="{FF007F}", minx=-1883, miny=-3000.0157470703125, maxx=-1768, maxy=-1486.9844970703125 },
+	{ name="Whetstone", color="{FF007F}", minx=-1768, miny=-3000, maxx=-1212, maxy=-1839.953125 },
+	{ name="Whetstone", color="{FF007F}", minx=-1768, miny=-1839.96875, maxx=-1373, maxy=-1673.96875 },
+	{ name="Whetstone", color="{FF007F}", minx=-1372.7395629882812, miny=-1839.95849609375, maxx=-1322.7395629882812, maxy=-1739.95849609375 },
+	{ name="Whetstone", color="{FF007F}", minx=-1768.7374877929688, miny=-1674.9748992919922, maxx=-1688.7374877929688, maxy=-1557.9748992919922 }
+}
+local CitiesName = {
+	{ name="г.Лас Вентурас", minx=878.99609375, miny=607, maxx=3000.01171875, maxy=3000 },
+	{ name="г.Лос Сантос", minx=67, miny=-1905.0001602172852, maxx=2999.9999389648438, maxy=-844.0001602172852 },
+	{ name="г.Лос Сантос", minx=967.0000610351562, miny=-2240, maxx=3000.3333129882812, maxy=-1905 },
+	{ name="г.Лос Сантос", minx=1249.666748046875, miny=-2727, maxx=2875.666748046875, maxy=-2240 },
+	{ name="г.Лос Сантос", minx=1010.666748046875, miny=-2489, maxx=1249.666748046875, maxy=-2240 },
+	{ name="г.Лос Сантос", minx=806, miny=-2074.0001525878906, maxx=864, maxy=-1905.0001525878906 },
+	{ name="г.Лос Сантос", minx=337, miny=-2097.0001525878906, maxx=419, maxy=-1905.0001525878906 },
+	{ name="г.Лос Сантос", minx=119, miny=-1987.0001525878906, maxx=188, maxy=-1905.0001525878906 },
+	{ name="г.Лос Сантос", minx=764.984375, miny=-843.984375, maxx=1569.984375, maxy=-676.984375 },
+	{ name="г.Лос Сантос", minx=873.984375, miny=-676.97265625, maxx=1473.984375, maxy=-595.97265625 },
+	{ name="г.Лас Вентурас", minx=2218.23828125, miny=483, maxx=2431.23828125, maxy=607 },
+	{ name="д.Паломино Крик", minx=2168.25, miny=-149.99609375, maxx=2588.25, maxy=204.00390625 },
+	{ name="д.Монтгомери", minx=1182.23046875, miny=125.50390625, maxx=1443.23046875, maxy=371.50390625 },
+	{ name="д.Монтгомери", minx=1266.234375, miny=371.50390625, maxx=1428.234375, maxy=485.50390625 },
+	{ name="д.Дилимор", minx=586.46484375, miny=-676.97265625, maxx=851.46484375, maxy=-399.97265625 },
+	{ name="д.Блюберри", minx=121.4921875, miny=-208.22265625, maxx=381.4921875, maxy=50.77734375 },
+	{ name="д.Блюберри", minx=17.48828125, miny=-347.23828125, maxx=330.48828125, maxy=-208.23828125 },
+	{ name="Ферма в д.Блюберри", minx=-296.53515625, miny=-143.21484375, maxx=104.46484375, maxy=184.78515625 },
+	{ name="Лесопилка у д.Блюберри", minx=-631.5, miny=-224.00390625, maxx=-369.5, maxy=44.99609375 },
+	{ name="г.Сан Фиерро", minx=-3000, miny=123.296875, maxx=-1414, maxy=1516.296875 },
+	{ name="г.Сан Фиерро", minx=-2276, miny=-932.6484375, maxx=-1925, maxy=-370.6484375 },
+	{ name="г.Сан Фиерро", minx=-2165.015625, miny=-1133.64453125, maxx=-1925.015625, maxy=-932.64453125 },
+	{ name="г.Сан Фиерро", minx=-3000, miny=-538.6589660644531, maxx=-2624, maxy=-370.6589660644531 },
+	{ name="г.Сан Фиерро", minx=-3000, miny=-110.69140625, maxx=-1645, maxy=123.30859375 },
+	{ name="г.Сан Фиерро", minx=-3000, miny=-249.6796875, maxx=-1734, maxy=-110.6796875 },
+	{ name="г.Сан Фиерро", minx=-3000, miny=-370.6640625, maxx=-1925, maxy=-249.6640625 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1732.00390625, miny=-598.2578125, maxx=-1375.00390625, maxy=-259.2578125 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1645, miny=-259.2578125, maxx=-1077, maxy=-78.2578125 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1596.7578125, miny=-78.2421875, maxx=-1158.7578125, maxy=21.7578125 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1518.7890625, miny=22.30859375, maxx=-1167.7890625, maxy=123.30859375 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1414, miny=123.30859375, maxx=-1180, maxy=223.30859375 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1312.78515625, miny=223.3203125, maxx=-1146.78515625, maxy=304.3203125 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1229.76171875, miny=304.3359375, maxx=-1094.76171875, maxy=359.3359375 },
+	{ name="Аэропорт г.Сан Фиерро", minx=-1173.765625, miny=359.3359375, maxx=-1040.765625, maxy=416.3359375 },
+	{ name="г.Сан Фиерро", minx=-1414, miny=432.73828125, maxx=-1217, maxy=521.73828125 },
+	{ name="г.Сан Фиерро", minx=-1414, miny=287.73828125, maxx=-1320, maxy=432.73828125 },
+	{ name="д.Ангел Пайн", minx=-2427.01171875, miny=-2452.26171875, maxx=-1915.01171875, maxy=-2216.26171875 },
+	{ name="д.Ангел Пайн", minx=-2328, miny=-2572.25, maxx=-1964, maxy=-2452.25 },
+	{ name="Нефтезавод г.Сан Фиерро", minx=-1128.25390625, miny=-762.51171875, maxx=-969.25390625, maxy=-588.51171875 },
+	{ name="ТСР", minx=-126.515625, miny=1628.53125, maxx=402.484375, maxy=2139.53125 },
+	{ name="ТСР", minx=-184.515625, miny=1832.515625, maxx=-126.515625, maxy=2091.515625 },
+	{ name="д.Форт Карсон", minx=-311.5078125, miny=976.5390625, maxx=109.4921875, maxy=1250.5390625 },
+	{ name="д.Форт Карсон", minx=-381.5078125, miny=1015.5078125, maxx=-311.5078125, maxy=1199.5078125 },
+	{ name="д.Лас Барранкас", minx=-919.0078125, miny=1399.015625, maxx=-612.0078125, maxy=1630.015625 },
+	{ name="Дамба Шермана", minx=-893.53125, miny=1811.0078125, maxx=-519.53125, maxy=2080.0078125 },
+	{ name="д.Лас Паясдас", minx=-369.515625, miny=2581.015625, maxx=-113.515625, maxy=2795.015625 },
+	{ name="д.Эль Куебрадос", minx=-1620.515625, miny=2507.0078125, maxx=-1352.515625, maxy=2741.0078125 },
+	{ name="Бэйсайд", minx=-2668.03125, miny=2202.015625, maxx=-2176.03125, maxy=2542.015625 },
+	{ name="Гора Чиллиад", minx=-3000, miny=-2172.625, maxx=-2126, maxy=-1133.625 },
+	{ name="Гора Чиллиад", minx=-2126, miny=-1983, maxx=-2075, maxy=-1283 },
+	{ name="Гора Чиллиад", minx=-2075, miny=-1881, maxx=-2015, maxy=-1328 },
+	{ name="Гора Чиллиад", minx=-2015, miny=-1743, maxx=-1951, maxy=-1387 },
+	{ name="Шахта", minx=407.9932861328125, miny=777.8852844238281, maxx=878.9932861328125, maxy=1014.8852844238281 },
+	{ name="Шахта", minx=508.3231201171875, miny=729.8956909179688, maxx=840.3231201171875, maxy=777.8956909179688 },
+	{ name="Залив Сан Фиерро", minx=-3000, miny=1516.3125, maxx=-2708, maxy=2084.3125 },
+	{ name="Залив Сан Фиерро", minx=-2650, miny=1516.3125, maxx=-1866, maxy=2082.3125 },
+	{ name="Залив Сан Фиерро", minx=-2650, miny=2082.015625, maxx=-1922, maxy=2202.015625 },
+	{ name="Мост Сан Фиерро", minx=-2708, miny=1516.296875, maxx=-2650, maxy=2202.296875 },
+	{ name="Залив Сан Фиерро", minx=-1866.000015258789, miny=1556.4478759765625, maxx=-1693.000015258789, maxy=1754.4478759765625 },
+	{ name="г.Сан Фиерро", minx=-1866, miny=1516.453125, maxx=-1693, maxy=1556.453125 }
+}
 
 -- buf_nick
 local errorspawn = false
@@ -667,7 +801,7 @@ lua_thread.create(function()
 end)
 --Xyinya
 local week = {"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
-local month = {"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"}
+local month = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"}
 editKey = false
 keysList = {}
 arep = false
@@ -1002,22 +1136,36 @@ function main()
 /r Принял{sex:|а} вызов от диспетчера!
 /r В срочном порядке выезжаю на тушение пожара по указанному 10-20.
 /fires
+/vdesc Закреплён на вызове за {myNick}/Жетон {myID}-й
+/do Диспетчер закрепил {myNick} за рабочим транспортом.
 [3]=Прибыл на место пожара
-/r Докладывает {myRusNick} с порядковым номером {myID}. 
-/r Прибыл{sex:|а} на 10-20. Приступаю к устранению возгорания.
-/r Конец связи.
+/r Докладывает {myNick} с нашивкой №{myID}. 
+/r Прибыл{sex:|а} на 10-20. {myCity} о.{myCounty} ({mySquare})
 [4]=Возгорание ликвидировано
-/r Докладывает {myRusNick} с порядковым номером {myID}.
+/r Докладывает {myNick} с нашивкой №{myID}.
 /r Статус 10-99 на месте, возвращаюсь в департамент.
-/r Конец связи.
 [5]=Вернулся в департамент
-/r Докладывает {myRusNick} с порядковым номером {myID}.
+/r Докладывает {myNick} с нашивкой №{myID}.
 /r Вернул{sex:ся|ась} в департамент. Статус 10-8.
-/r Конец связи.
+/delvdesc
+/do Диспетчер открепил {myNick} от рабочего транспорта.
 {dialogEnd}
 [2]=Откинуть мегафон
 /m Говорит Пожарный департамент штата!
+{sleep:700}
 /m Срочно уступите дорогу спец. транспорту!
+{sleep:700}
+/m В случае игнорирования требования ваш транспорт будет протаранен!
+[3]=Бодикамера
+{dialog}
+[name]=Включить или выключить?
+[1]=Включить
+/me включил{sex:|а} нательную камеру, закреплённую на костюме
+/do Камера начала вести запись, издав характерный звук.
+[2]=Выключить
+/me выключил{sex:|а} нательную камеру, закреплённую на костюме
+/do Камера выключилась, издав характерный звук.
+{dialogEnd}
 {dialogEnd}]]  
 			local f = io.open(dirml.."/FDHelper/main.txt", "w")
 			f:write(textrp) 
@@ -1152,6 +1300,7 @@ function main()
 		sampRegisterChatCommand("mb", funCMD.memb)
 		sampRegisterChatCommand("post", funCMD.post)
 		sampRegisterChatCommand("ts", funCMD.time)
+		sampRegisterChatCommand("fddebug", funCMD.debug)
 		
 		for i,v in ipairs(binder.list) do
 			sampRegisterChatCommand(binder.list[i].cmd, function() binderCmdStart() end)
@@ -1212,12 +1361,13 @@ function main()
 			end
 		end
 	end
-	if cb_hud.v then showInputHelp() end
+	if cb_hud.v then showGeoHelp() end
 	if cb_hudTime.v and not isPauseMenuActive() then hudTimeF() end
 	--if hudPing and not isPauseMenuActive() then pingGraphic(sx/9*8-20, sy/4) end
 		imgui.Process = mainWin.v or iconwin.v
   end
 end
+
 function binderCmdStart()
 	local factCommand = sampGetChatInputText()
 	for i,v in ipairs(binder.list) do
@@ -1449,14 +1599,14 @@ function imgui.OnDrawFrame()
 					mainSet()
 				end
 				imgui.Dummy(imgui.ImVec2(0, 3))
-				if imgui.CollapsingHeader(u8"Настройки чата") then
+				if imgui.CollapsingHeader(u8"Другие настройки") then
 					imgui.SetCursorPosX(25)
 					imgui.BeginGroup()
 						if imgui.Checkbox(u8"Скрыть объявления", cb_chat1) then needSave = true end
 						if imgui.Checkbox(u8"Скрыть подсказки сервера", cb_chat2) then needSave = true end
 						if imgui.Checkbox(u8"Скрыть новости СМИ", cb_chat3) then needSave = true end
-						if imgui.Checkbox(u8"ChatHUD", cb_hud) then needSave = true end;
-						imgui.SameLine(); ShowHelpMarker(u8"Полезная информация под \nокном ввода чата")
+						if imgui.Checkbox(u8"Информация о позиции", cb_hud) then needSave = true end;
+						imgui.SameLine(); ShowHelpMarker(u8"Информация о геолокации и о метке")
 						if imgui.Checkbox(u8"TimeHUD", cb_hudTime) then needSave = true end
 						imgui.SameLine(); ShowHelpMarker(u8"Отобржение времени, языка и Caps Lock\n в нижней левой части экрана")
 					imgui.EndGroup()
@@ -1479,10 +1629,11 @@ function imgui.OnDrawFrame()
 							if imgui.InputText(u8"Текст отыгровки##1", buf_rac) then needSave = true end
 						imgui.PopItemWidth()
 						imgui.Spacing()
-						if imgui.Button(u8"Редактировать главную отыгровку", imgui.ImVec2(250, 25)) then 
-							mainEditWin.v = not mainEditWin.v
-						end
 					imgui.EndGroup();
+				end	
+				imgui.Dummy(imgui.ImVec2(0, 3))			
+				if imgui.Button(u8"Редактировать главную отыгровку", imgui.ImVec2(250, 25)) then 
+					mainEditWin.v = not mainEditWin.v
 				end
 				
 
@@ -2100,10 +2251,10 @@ function imgui.OnDrawFrame()
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
 						imgui.Spacing()
 						imgui.Dummy(imgui.ImVec2(0, 20))
-						if imgui.Button(fa.ICON_WRENCH..u8" Перезагрузить скрипт", imgui.ImVec2(180, 30)) then showCursor(false); scr:reload() end
+						if imgui.Button(fa.ICON_WRENCH..u8" Перезагрузить скрипт", imgui.ImVec2(200, 30)) then showCursor(false); scr:reload() end
 						if newversion ~= scr.version then
 							imgui.Dummy(imgui.ImVec2(0, 20))
-							if imgui.Button(fa.ICON_FIRE..u8" Обновить до v"..newversion, imgui.ImVec2(180, 30)) then updateScript() end
+							if imgui.Button(fa.ICON_FIRE..u8" Обновить до v"..newversion, imgui.ImVec2(200, 30)) then updateScript() end
 						end
 						
 						imgui.EndChild()
@@ -2314,6 +2465,24 @@ function imgui.OnDrawFrame()
 		imgui.SameLine()
 		if imgui.IsItemClicked(0) then setClipboardText("{myTag}") end
 		imgui.TextColoredRGB("{C1C1C1} - Ваш позывной  - {ACFF36}"..tostring(u8:decode(buf_teg.v)))
+
+		imgui.Spacing()	
+		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myCity}")
+		imgui.SameLine()
+		if imgui.IsItemClicked(0) then setClipboardText("{myCity}") end
+		imgui.TextColoredRGB("{C1C1C1} - Ваш город местонахождения  - {ACFF36}"..tostring(GetMyCity()))
+
+		imgui.Spacing()	
+		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myCounty}")
+		imgui.SameLine()
+		if imgui.IsItemClicked(0) then setClipboardText("{myCounty}") end
+		imgui.TextColoredRGB("{C1C1C1} - Ваш округ местонахождения  - {ACFF36}"..tostring(GetMyCounty()))
+		
+		imgui.Spacing()	
+		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{mySquare}")
+		imgui.SameLine()
+		if imgui.IsItemClicked(0) then setClipboardText("{mySquare}") end
+		imgui.TextColoredRGB("{C1C1C1} - Ваш квадрат местонахождения  - {ACFF36}"..tostring(GetMySquare()))
 		
 		imgui.Spacing()		
 		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myRank}")
@@ -2933,76 +3102,6 @@ function strBinderTable(dir)
 		return tb
 	end 
 end
---[[function playBind(tb)
-	if not tb.debug.file or #tb.debug.close > 0 then
-		if not tb.debug.file then
-			sampAddChatMessage(SCRIPT_PREFIX.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
-		elseif #tb.debug.close > 0 then
-			sampAddChatMessage(SCRIPT_PREFIX.."Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", SCRIPT_COLOR)
-		end
-		addOneOffSound(0, 0, 0, 1058)
-		return false
-	end
-	function pairsT(t, var)
-		for i, line in ipairs(t) do
-			if type(line) == "table" then
-				renderT(line, var)
-			else
-				if line:find("{pause}") then
-					local len = renderGetFontDrawTextLength(font, "{FFFFFF}[{67E56F}Enter{FFFFFF}] - Продолжить")
-					while true do
-						wait(0)
-						if not isGamePaused() then
-							renderFontDrawText(font, "Ожидание...\n{FFFFFF}[{67E56F}Enter{FFFFFF}] - Продолжить", sx-len-10, sy-50, 0xFFFFFFFF)
-							if isKeyJustPressed(VK_RETURN) and not sampIsChatInputActive() and not sampIsDialogActive() then break end
-						end
-					end
-				elseif line:find("{sleep:%d+}") then
-					btime = tonumber(line:match("{sleep:(%d+)}"))
-				elseif line:find("^%#[%d%a]+=.*$") then
-					local var, val = line:match("^%#([%d%a]+)=(.*)$")
-					tb.vars[var] = tags(val)			
-				else
-					wait(i == 1 and 0 or btime or tb.sleep*1000)
-					btime = nil
-					local str = line
-					if var then
-						for k,v in pairs(var) do
-							str = str:gsub("#"..k, v)
-						end
-					end
-					sampProcessChatInput(tags(str))
-				end
-			end
-		end
-	end
-	function renderT(t, var)
-		local render = true
-		local len = renderGetFontDrawTextLength(font, t.name)
-		for i,v in ipairs(t.var) do
-			local str = string.format("{FFFFFF}[{67E56F}%s{FFFFFF}] - %s", v.kn, v.n)
-			if len < renderGetFontDrawTextLength(font, str) then
-				len = renderGetFontDrawTextLength(font, str)
-			end
-		end
-		repeat
-			wait(0)
-			if not isGamePaused() then
-				renderFontDrawText(font, t.name, sx-10-len, sy-#t.var*25-30, 0xFFFFFFFF)
-				for i,v in ipairs(t.var) do
-					local str = string.format("{FFFFFF}[{67E56F}%s{FFFFFF}] - %s", v.kn, v.n)
-					renderFontDrawText(font, str, sx-10-len, sy-#t.var*25-30+(25*i), 0xFFFFFFFF)
-					if isKeyJustPressed(v.k) and not sampIsChatInputActive() and not sampIsDialogActive() then
-						pairsT(v.t, var)
-						render = false
-					end
-				end
-			end
-		until not render						
-	end					
-	pairsT(tb.bind, tb.vars)
-end
-]]
 function playBind(tb)
 	if not tb.debug.file or #tb.debug.close > 0 then
 		if not tb.debug.file then
@@ -3210,6 +3309,9 @@ function tags(par)
 		par = par:gsub("{myOrg}", tostring(u8:decode(chgName.org[num_org.v+1])))
 		par = par:gsub("{myOrgEn}", tostring(u8:decode(list_org_en[num_org.v+1])))
 		par = par:gsub("{myTag}", tostring(u8:decode(buf_teg.v))) 
+		par = par:gsub("{myCity}", tostring(GetMyCity())) 
+		par = par:gsub("{myCounty}", tostring(GetMyCounty())) 
+		par = par:gsub("{mySquare}", tostring(GetMySquare())) 
 		par = par:gsub("{myRank}", tostring(u8:decode(chgName.rank[num_rank.v+1])))
 		par = par:gsub("{time}", tostring(os.date("%X")))
 		par = par:gsub("{day}", tostring(tonumber(os.date("%d"))))
@@ -3268,6 +3370,10 @@ function funCMD.main()
 		tb.sleep = 1.85
 		playBind(tb)		
 	end)
+end
+function funCMD.debug()
+	local interior = getActiveInterior()				
+	sampAddChatMessage(SCRIPT_PREFIX.."int="..tostring(interior), SCRIPT_COLOR)
 end
 function funCMD.post()
 	if not u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") then
@@ -3402,7 +3508,7 @@ function funCMD.inv(id)
 		end
 end
 local spThread = lua_thread.create(function() return end)
-function funCMD.spawncars()
+function funCMD.spawncars(time)
 	if spThread:status() ~= "dead" then 
 		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент уже запущен спавн транспорта. Ожидайте спавна.", SCRIPT_COLOR)
 		return 
@@ -3411,12 +3517,29 @@ function funCMD.spawncars()
 		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
-	spThread = lua_thread.create(function()
-		sampSendChat("/rb Спавн спец. транспорта через 30 секунд")
-		wait(30000)
-		spawnCars = true
-		sampSendChat("/lmenu")
-	end)
+	if time:find("(%d+)") then
+		local timer = text:match("(%d+)")
+		if timer < 20 or timer > 90 then
+			sampAddChatMessage(SCRIPT_PREFIX.."Таймер может быть от 20 до 90 секунд", SCRIPT_COLOR)
+			return
+		end
+		spThread = lua_thread.create(function()
+			sampSendChat("/rb Спавн спец. транспорта через "..timer.." секунд")
+			wait((timer-1)*1000)
+			spawnCars = true
+			wait(1000)
+			sampSendChat("/lmenu")
+		end)
+	else
+		spThread = lua_thread.create(function()
+			sampSendChat("/rb Спавн спец. транспорта через 30 секунд")
+			sampAddChatMessage(SCRIPT_PREFIX.."Вы можете использовать задержку в секундах: "..COLOR_SECONDARY.."/fspcars [20-90]", SCRIPT_COLOR)
+			wait(29000)
+			spawnCars = true
+			wait(1000)
+			sampSendChat("/lmenu")
+		end)
+	end
 end
 function funCMD.unv(text)
 	if thread:status() ~= "dead" then 
@@ -3562,7 +3685,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	if mes:find("%[D%](.+)%s-%s%[ФД%](.+)связь") then
+	if mes:find("%[D%](.+)%s%-%s%[ФД%](.+)связь") then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
@@ -3574,7 +3697,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			until stap > 10
 		end)
 	end
-	--[[if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
+	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
 		if not errorspawn then
 			local stap = 0
 			lua_thread.create(function()
@@ -3587,10 +3710,27 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 				errorspawn = false
 			end)
 		end
-	end]]
+	end
 	if cb_chat2.v then
-		if mes:find("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") or mes:find("- Основные команды сервера: /menu /help /gps /settings") or mes:find("Пригласи друга и получи бонус в размере") or mes:find("- Донат и получение дополнительных средств arizona-rp.com/donate") or mes:find("Подробнее об обновлениях сервера") or mes:find("(Личный кабинет/Донат)") or mes:find("С помощью телефона можно заказать") or mes:find("В нашем магазине ты можешь") or mes:find("их на желаемый тобой {FFFFFF}бизнес") or mes:find("Игроки со статусом {FFFFFF}VIP{6495ED} имеют большие возможности") or mes:find("можно приобрести редкие {FFFFFF}автомобили, аксессуары, воздушные") 
-		or mes:find("предметы, которые выделят тебя из толпы! Наш сайт:") or mes:find("Вы можете купить складское помещение") or mes:find("Таким образом вы можете сберечь своё имущество, даже если вас забанят.") or mes:find("Этот тип недвижимости будет навсегда закреплен за вами и за него не нужно платить.") or mes:find("{ffffff}Уважаемые жители штата, открыта продажа билетов на рейс:") or mes:find("{ffffff}Подробнее: {FF6666}/help — Перелёты в город Vice City.") or mes:find("{ffffff}Внимание! На сервере Vice City действует акция Х3 PayDay.") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут бесплатно раз в день получать") or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут получать (.+) Ларца Олигарха") then 
+		--[[^ $ ( ) % . [ ] * + - ?
+		
+		]]
+		if mes:find("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") or mes:find("- Основные команды сервера: /menu /help /gps /settings")
+		or mes:find("Пригласи друга и получи бонус в размере") or mes:find("- Донат и получение дополнительных средств arizona-rp.com/donate")
+		or mes:find("Подробнее об обновлениях сервера") or mes:find("(Личный кабинет/Донат)") or mes:find("С помощью телефона можно заказать")
+		or mes:find("В нашем магазине ты можешь") or mes:find("их на желаемый тобой {FFFFFF}бизнес") or mes:find("Игроки со статусом (.+)имеют больше возможностей")
+		or mes:find("можно приобрести редкие {FFFFFF}автомобили, аксессуары, воздушные") or mes:find("предметы, которые выделят тебя из толпы! Наш сайт:")
+		or mes:find("Вы можете купить складское помещение") or mes:find("Таким образом вы можете сберечь своё имущество, даже если вас забанят.")
+		or mes:find("Этот тип недвижимости будет навсегда закреплен за вами и за него не нужно платить.") or mes:find("{ffffff}Уважаемые жители штата, открыта продажа билетов на рейс:")
+		or mes:find("{ffffff}Подробнее: {FF6666}/help — Перелёты в город Vice City.") or mes:find("{ffffff}Внимание! На сервере Vice City действует акция (.+) PayDay.")
+		or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут бесплатно раз в день получать")or mes:find("%[Подсказка%] Игроки владеющие (.+) домами могут получать (.+) Ларца Олигарха") 
+		or mes:find("Негде жить%? Арендуйте номер в любом из отелей штата!") or mes:find("Проживая в отеле, Вы получаете множество бонусов") or mes:find("Подробнее: {9ACD32}/hotel")
+		or mes:find("Продавай и покупай автомобильные номера и (.+) в Лас Вентурасе!") or mes:find("Центр обмена имущество:")
+		or mes:find("Проводи безопасный обмен имуществом с другими игроками в специальном центре обмена имуществом") or mes:find("/GPS %- Разное %- Центр обмена имуществом")
+		or mes:find('Игроки со статусом (.+)имеют большие возможности') or mes:find("Вы можете улучшить свои характеристики на поле битвы, купив списанный полицейский бронежилет")
+		or mes:find("Списанный бронежилет на 4 часа даст вашему персонажу") or mes:find("Найти склад можно с помощью /GPS")
+		or mes == "" or mes == " "
+		then 
 			return false
 		end
 	end
@@ -3671,6 +3811,7 @@ function hook.onShowDialog(id, style, title, button1, button2, text)
 		sampCloseCurrentDialogWithButton(0)
 		return false
 	end
+	if id == 27255 and thread:status() ~= "dead" then sampCloseCurrentDialogWithButton(0) return false end -- Диалог внутри машины на цифру 2.
 end
 
 function getStrByState(keyState)
@@ -3685,37 +3826,158 @@ function getStrByState2(keyState)
 	end
 	return "{F55353}Caps{ffffff}"
 end
-
-function showInputHelp()
-	local chat = sampIsChatInputActive()
-	if chat == true then
-		local cx, cy = getCursorPos()
-		local in1 = sampGetInputInfoPtr()
-		local in1 = getStructElement(in1, 0x8, 4)
-		local in2 = getStructElement(in1, 0x8, 4)
-		local in3 = getStructElement(in1, 0xC, 4)
-		local posX = in2 + 15
-		local posY = in3 + 45
-		local _, pID = sampGetPlayerIdByCharHandle(playerPed)
-		local Nname = sampGetPlayerNickname(pID)
-		local score = sampGetPlayerScore(pID)
-		local color = sampGetPlayerColor(pID)
-		local ping = sampGetPlayerPing(pID)
-		local capsState = ffi.C.GetKeyState(20)
-		local success = ffi.C.GetKeyboardLayoutNameA(KeyboardLayoutName)
-		local errorCode = ffi.C.GetLocaleInfoA(tonumber(ffi.string(KeyboardLayoutName), 16), 0x00000002, LocalInfo, BuffSize)
-		local localName = ffi.string(LocalInfo)
-		local text = string.format(
-			"%s | {%0.6x}%s [%d] {ffffff}| Пинг: {ffeeaa}%d{FFFFFF} | Капс: %s {FFFFFF}| Язык: {ffeeaa}%s{ffffff}",
-			os.date("%H:%M:%S"), bit.band(color,0xffffff), Nname, pID, ping, getStrByState(capsState), string.match(localName, "([^%(]*)")
+local fontGeo = renderCreateFont("Trebuchet MS", 10, 5)
+local isMarkerOnFire = nil
+local MarkerInfo = {exists=false,pos={x=nil,y=nil,z=nil}}
+function showGeoHelp()
+	local interior = getActiveInterior()
+	local MarkerText = ""
+	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
+	if MarkerInfo.exists then	
+		local distance = getDistanceBetweenCoords3d(MarkerInfo.pos.x, MarkerInfo.pos.y, MarkerInfo.pos.z, charX, charY, charZ)
+		local markerGeo = (GetCityName(MarkerInfo.pos.x,MarkerInfo.pos.y) ~= "" and GetCityName(MarkerInfo.pos.x,MarkerInfo.pos.y).." " or "")..GetCountyColor(MarkerInfo.pos.x,MarkerInfo.pos.y).."о."..GetCountyName(MarkerInfo.pos.x,MarkerInfo.pos.y).." ("..GetSquareName(MarkerInfo.pos.x,MarkerInfo.pos.y)..")"
+		MarkerText = string.format(
+			"Метка: %s%s\n{FFFFFF}Гео метки: {1AE591}%s\n{FFFFFF}До метки: {1AE591}%s м.",
+			(isMarkerOnFire ~= nil and GetStarsColor(FireList[isMarkerOnFire].stars)..FireList[isMarkerOnFire].name or "{1AE591}Не пожар"),
+			(isMarkerOnFire ~= nil and " ("..FireList[isMarkerOnFire].stars.."*)" or ""),
+			markerGeo,
+			(interior == 0 and removeDecimalPart(distance) or "?")
 		)
-		renderFontDrawText(textFont, text, posX, posY, 0xD7FFFFFF)
-		if cx >= posX+280 and cx <= posX+280+80 and cy >= posY and cy <= posY+25 then
-			if isKeyJustPressed(VK_RBUTTON) then hudPing = not hudPing end
+	end
+	-- stars, name, posx, posy, posz
+	local myGeo = (GetCityName(charX,charY) ~= "" and GetCityName(charX,charY).." " or "")..GetCountyColor(charX,charY).."о."..GetCountyName(charX,charY)
+	local text = string.format(
+		"Ваша геолокация: {1AE591}%s\n{FFFFFF}Квадрат: {1AE591}%s\n{FFFFFF}%s",
+		(interior == 0 and myGeo or "В интерьере"),
+		GetMySquare(),
+		MarkerText				
+	)
+	renderFontDrawText(fontGeo, text, 50, sy*3/5, 0xFFFFFFFF)
+end
+function GetStarsColor(stars)
+	local value = "{1AE591}"
+	if stars == 2 then value = "{E5911A}"
+	elseif stars == 3 then value = "{FF0000}" end
+	return value
+end
+function hook.onSetRaceCheckpoint(type, position, nextPosition, size)
+	isMarkerOnFire = nil
+	MarkerInfo.exists = true
+	MarkerInfo.pos.x = position.x
+	MarkerInfo.pos.y = position.y
+	MarkerInfo.pos.z = position.z
+    for i, v in ipairs(FireList) do
+		if tostring(position.x) == tostring(FireList[i].posx) and tostring(position.y) == tostring(FireList[i].posy) and tostring(position.z) == tostring(FireList[i].posz) then
+			isMarkerOnFire = i
+			break
 		end
 	end
 end
-
+function GetMyGeo()	
+	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
+	local result = (GetCityName(charX,charY) ~= "" and GetCityName(charX,charY).." о." or "о.")..GetCountyName(charX,charY)
+	return tostring(result)
+end
+function GetMyCity()	
+	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
+	local result = GetCityName(charX,charY)
+	return tostring(result)
+end
+function GetMyCounty()	
+	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
+	local result = GetCountyName(charX,charY)
+	return tostring(result)
+end
+function GetMySquare()
+	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
+	local result = GetSquareName(charX,charY)
+	return tostring(result)
+end
+function GetSquareName(posx,posy)
+	local result = ""
+	local alphabet ={ "А","Б","В","Г","Д","Ж","З","И","К","Л","М","Н","О","П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Я"}
+	for i,v in ipairs(alphabet) do
+		-- (i-1)*250 - minx
+		-- i*250 - maxx
+		-- (k-1)*250 - miny
+		-- k*250 - maxy
+		for k=1,24 do
+			if posx+3000 >= (i-1)*250 and posx+3000 <= i*250 and posy+3000 >= (k-1)*250 and posy+3000 <= k*250 then
+				result = alphabet[25-k].."-"..i
+			end
+		end
+	end
+	return tostring(result)
+end
+function GetCityName(posx,posy)
+	local result = ""
+	for i, v in ipairs(CitiesName) do
+		if posx >= CitiesName[i].minx and posx <= CitiesName[i].maxx and posy >= CitiesName[i].miny and posy <= CitiesName[i].maxy then 
+			result = CitiesName[i].name
+			break
+		end
+	end
+	return tostring(result)
+end
+function GetCountyName(posx,posy)
+	local result = ""
+	for i, v in ipairs(CountyName) do
+		if posx >= CountyName[i].minx and posx <= CountyName[i].maxx and posy >= CountyName[i].miny and posy <= CountyName[i].maxy then 
+			result = CountyName[i].name
+			break
+		end
+	end
+	return tostring(result)
+end
+function GetCountyColor(posx,posy)
+	local result = ""
+	for i, v in ipairs(CountyName) do
+		if posx >= CountyName[i].minx and posx <= CountyName[i].maxx and posy >= CountyName[i].miny and posy <= CountyName[i].maxy then 
+			result = CountyName[i].color
+			break
+		end
+	end
+	return tostring(result)
+end
+-- CitiesName { name="г. Лас Вентурас", minx=878.99609375, miny=607, maxx=3000.01171875, maxy=3000 },
+-- CountyName { name="Whetstone", color="{FF007F}", minx=-1768.7374877929688, miny=-1674.9748992919922, maxx=-1688.7374877929688, maxy=-1557.9748992919922 }
+function hook.onDisableRaceCheckpoint()
+	if isMarkerOnFire ~= nil then isMarkerOnFire = nil end
+	MarkerInfo.exists = false
+	MarkerInfo.pos.x = nil
+	MarkerInfo.pos.y = nil
+	MarkerInfo.pos.z = nil
+end
+function removeDecimalPart(value)
+	local dotPosition = string.find(value, '%.')
+	if not dotPosition then
+		return tostring(value)
+	end
+	
+	return string.sub(value, 1, dotPosition - 1)
+end
+function getTargetServerCoordinates()
+	local pos_cord = {x = 0.0, y = 0.0, z = 0.0}
+    local target_server = false
+    for id = 0, 31 do
+        local object_truct = 0xC7F168 + id * 56
+		local object_truct_pos = {
+			x = representIntAsFloat(readMemory(object_truct + 0, 4, false)),
+			y = representIntAsFloat(readMemory(object_truct + 4, 4, false)),
+			z = representIntAsFloat(readMemory(object_truct + 8, 4, false))
+		}
+        if object_truct_pos.x ~= 0.0 or object_truct_pos.y ~= 0.0 or object_truct_pos.z ~= 0.0 then
+            pos_cord = {
+				x = object_truct_pos.x,
+				y = object_truct_pos.y,
+				z = object_truct_pos.z
+			}
+            target_server = true
+        end
+    end
+	
+    return target_server, pos_cord.x, pos_cord.y, pos_cord.z
+end
 function hudTimeF()
 	local success = ffi.C.GetKeyboardLayoutNameA(KeyboardLayoutName)
 	local errorCode = ffi.C.GetLocaleInfoA(tonumber(ffi.string(KeyboardLayoutName), 16), 0x00000002, LocalInfo, BuffSize)
@@ -3731,9 +3993,9 @@ function hudTimeF()
 	end
 	local text = string.format("%s | {ffeeaa}%s{ffffff} %s", os.date("%d ")..month[tonumber(os.date("%m"))]..os.date(" - %H:%M:%S"), lang(), getStrByState2(capsState))
 	if thread:status() ~= "dead" then
-		renderFontDrawText(fontPD, text, 20, sy-50, 0xFFFFFFFF)
+		renderFontDrawText(fontPD, text, 50, sy-50, 0xFFFFFFFF)
 	else
-		renderFontDrawText(fontPD, text, 20, sy-25, 0xFFFFFFFF)
+		renderFontDrawText(fontPD, text, 50, sy-25, 0xFFFFFFFF)
 	end
 end
 
