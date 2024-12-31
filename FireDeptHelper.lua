@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.1")
+script_version("1.3.2")
 script_properties("work-in-pause")
 setver = 1
  
@@ -10,6 +10,7 @@ require "lib.moonloader"
 local mem = require "memory"
 local vkeys = require "vkeys"
 local encoding = require "encoding"
+local wm = require 'lib.windows.message'
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local dlstatus = require("moonloader").download_status
@@ -393,6 +394,8 @@ local select_menu = {true, false, false, false, false, false, false} -- для пере
 local setting = {
 	nick = "",
 	teg = "",
+	dteg = "",
+	dreplace = false,
 	org = 0,
 	sex = 0,
 	rank = 0,
@@ -417,6 +420,8 @@ local setting = {
 }
 local buf_nick	= imgui.ImBuffer(256)
 local buf_teg 	= imgui.ImBuffer(256)
+local buf_dteg = imgui.ImBuffer(256)
+local buf_dreplace = imgui.ImBool(false)
 local num_org		= imgui.ImInt(0)
 local num_sex		= imgui.ImInt(0)
 local num_rank	= imgui.ImInt(0)
@@ -470,11 +475,18 @@ function PlayerSet.name()
 	end
 end
 function PlayerSet.teg()
-if buf_teg.v ~= "" then
-	return u8"(Позывной: "..buf_teg.v..u8")"
-else
-	return u8""
+	if buf_teg.v ~= "" then
+		return u8"(Позывной: "..buf_teg.v..u8")"
+	else
+		return u8""
+	end
 end
+function PlayerSet.dteg()
+	if buf_dteg.v ~= "" then
+		return u8(buf_dteg.v)
+	else
+		return u8""
+	end
 end
 function PlayerSet.org()
 	return chgName.org[num_org.v+1]
@@ -653,6 +665,7 @@ local FireList = {
 	{stars = 3, name = "Возгорание отделения полиции ЛС	", posx = 1554.5328369141, posy = -1679.3986816406, posz = 15.995138168335},
 	{stars = 3, name = "Пожар на заброшенной ферме	", posx = -1440.6533203125, posy = -1526.1088867188, posz = 101.05674743652},
 	{stars = 3, name = "Большой пожар на стройке в Лас Вентурасе", posx = 2408.8427734375, posy = 1922.2979736328, posz = 12.096800804138},
+	{stars = 3, name = "Пожар на складе в деревне Блюббери", posx = 95.613800048828, posy = -295.01791381836, posz = 1.9787720441818}
 }
 -- Areas
 local CountyName = {
@@ -1127,28 +1140,29 @@ function main()
 {sleep:0}
 {dialog}
 [name]=Что делаем?
+//
 [1]=Доклад
 {dialog}
 [name]=О чем докладываем?
 [1]=Пост
 /post
 [2]=Принял вызов диспетчера
-/r Принял{sex:|а} вызов от диспетчера!
-/r В срочном порядке выезжаю на тушение пожара по указанному 10-20.
+{sleep:500}
 /fires
+/r Принял{sex:|а} вызов от диспетчера! Выезжаю на 10-20.
 /vdesc Закреплён на вызове за {myNick}/Жетон {myID}-й
 /do Диспетчер закрепил {myNick} за рабочим транспортом.
 [3]=Прибыл на место пожара
-/r Докладывает {myNick} с нашивкой №{myID}. 
-/r Прибыл{sex:|а} на 10-20. {myCity} о.{myCounty} ({mySquare})
+/r Докладывает {myRusNick}. Прибыл{sex:|а} на 10-20 ({mySquare}).
+/r Воды: {myWater}проц. Приступаю к ликвидации возгорания.
 [4]=Возгорание ликвидировано
-/r Докладывает {myNick} с нашивкой №{myID}.
+/r Докладывает {myRusNick} с порядковым номером {myID}.
 /r Статус 10-99 на месте, возвращаюсь в департамент.
+/r Конец связи.
 [5]=Вернулся в департамент
-/r Докладывает {myNick} с нашивкой №{myID}.
+/r Докладывает {myRusNick} с порядковым номером {myID}.
 /r Вернул{sex:ся|ась} в департамент. Статус 10-8.
-/delvdesc
-/do Диспетчер открепил {myNick} от рабочего транспорта.
+/r Конец связи.
 {dialogEnd}
 [2]=Откинуть мегафон
 /m Говорит Пожарный департамент штата!
@@ -1181,6 +1195,8 @@ function main()
 			if res and type(set) == "table" then 
 				buf_nick.v = u8(set.nick)
 				buf_teg.v = u8(set.teg)
+				if set.dteg ~= nil then buf_dteg.v = u8(set.dteg) else buf_dteg.v = "" set.dteg = "" end
+				if set.dreplace ~= nil then buf_dreplace.v = set.dreplace else buf_dreplace.v = false set.dreplace = false end
 				num_org.v = set.org
 				num_sex.v = set.sex
 				num_rank.v = set.rank
@@ -1319,6 +1335,9 @@ function main()
 		end
   while true do
 	wait(0)
+		if sampIsChatInputActive() and buf_dreplace.v then
+			if sampGetChatInputText() == "/d " or sampGetChatInputText() == ".в " then sampSetChatInputText("/d ["..u8:decode(buf_dteg.v).."] - []:") end
+		end
 		if postCP ~= nil then
 			local x, y, z = getCharCoordinates(PLAYER_PED)
 			if getDistanceBetweenCoords3d(x,y,z,postCPcoords.x,postCPcoords.y,postCPcoords.z) < 3 then
@@ -1407,24 +1426,36 @@ function mainSet()
 	imgui.BeginGroup()
 	imgui.PushItemWidth(300);
 		if imgui.InputText(u8"Имя и Фамилия ", buf_nick, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[а-Я%s]+")) then needSave = true end
+		imgui.SameLine()
+		ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Иван Иванов")
 
-			if not imgui.IsItemActive() and buf_nick.v == "" then
-				imgui.SameLine()
-				ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Иван Иванов")
-				imgui.SameLine()
-				imgui.SetCursorPosX(30)
-				imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите Ваше Имя и Фамилию");
-			else
+		if not imgui.IsItemActive() and buf_nick.v == "" then
 			imgui.SameLine()
-			ShowHelpMarker(u8"Имя и Фамилия заполняется на \nрусском без нижнего подчёркивания.\n\n  Пример: Иван Иванов")
-			end
+			imgui.SetCursorPosX(30)
+			imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите Ваше Имя и Фамилию")
+		end
+
 		if imgui.InputText(u8"Позывной ", buf_teg) then needSave = true end
+		imgui.SameLine();
+		ShowHelpMarker(u8"Позывной может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nИспользуется исключительно для отыгровок через переменную {myTag}.")
 		if not imgui.IsItemActive() and buf_teg.v == "" then
 			imgui.SameLine()
-			imgui.SetCursorPosX(432)
-			imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите ваш позывной, если он есть");
+			imgui.SetCursorPosX(30)
+			imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Введите ваш позывной, если он есть")
 		end
-		imgui.SameLine(); ShowHelpMarker(u8"Позывной может быть необязательным,\n уточните у других сотрудников или Лидера.\n\nИспользуется исключительно для отыгровок через переменную {myTag}.")
+
+		if imgui.InputText(u8"Тег в департаменте ", buf_dteg) then needSave = true end
+		imgui.SameLine()
+		ShowHelpMarker(u8"Тег заполняется без символов\nквадратных скобок.\n\n  Пример: ФД")
+
+		if not imgui.IsItemActive() and buf_dteg.v == "" then
+			imgui.SameLine()
+			imgui.SetCursorPosX(30)
+			imgui.TextColored(imgui.ImColor(200, 200, 200, 200):GetVec4(), u8"Тег вашей организации без [ и ]")
+		end
+		if buf_dteg.v ~= "" or setting.dteg ~= "" then 
+			if imgui.Checkbox(u8"Подставлять тег к команде /d", buf_dreplace) then needSave = true end
+		end
 		imgui.PushItemWidth(278);
 			imgui.PushStyleVar(imgui.StyleVar.FramePadding, imgui.ImVec2(1, 3))
 				if imgui.Button(fa.ICON_COG.."##1", imgui.ImVec2(21,20)) then
@@ -1644,6 +1675,9 @@ function imgui.OnDrawFrame()
 		
 			setting.nick = u8:decode(buf_nick.v)
 			setting.teg = u8:decode(buf_teg.v)
+			setting.dteg = u8:decode(buf_dteg.v)
+			setting.dreplace = buf_dreplace.v
+			if setting.dteg == "" then setting.dreplace = false buf_dreplace.v = false end
 			setting.org = num_org.v
 			setting.sex = num_sex.v
 			setting.rank = num_rank.v
@@ -2467,6 +2501,12 @@ function imgui.OnDrawFrame()
 		imgui.TextColoredRGB("{C1C1C1} - Ваш позывной  - {ACFF36}"..tostring(u8:decode(buf_teg.v)))
 
 		imgui.Spacing()	
+		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myWater}")
+		imgui.SameLine()
+		if imgui.IsItemClicked(0) then setClipboardText("{myWater}") end
+		imgui.TextColoredRGB("{C1C1C1} - Количество воды в процентах  - {ACFF36}"..(GetMyCarWater() ~= nil and tostring(GetMyCarWater()) or ""))
+
+		imgui.Spacing()	
 		imgui.TextColored(imgui.ImVec4(1,0.52,0,1), "{myCity}")
 		imgui.SameLine()
 		if imgui.IsItemClicked(0) then setClipboardText("{myCity}") end
@@ -2650,37 +2690,16 @@ function imgui.OnDrawFrame()
 {dialog}
 [name]=О чем докладываем?
 [1]=Пост
-{dialog}
-[name]=Какой пост?
-[1]=Пост 1
-#postNumber=1
-[2]=Пост 2
-#postNumber=2
-[3]=Пост 3
-#postNumber=3
-[4]=Пост 4
-#postNumber=4
-[5]=Пост 5
-#postNumber=5
-{dialogEnd}
-{dialog}
-[name]=Заступил или уже стоишь?
-[1]=Уже стою
-#zastup=Пост
-[2]=Заступил
-#zastup=Заступил{sex:|а} на пост
-{dialogEnd}
-/r Докладывает {myRusNick} с порядковым номером {myID}. 
-/r #zastup №#postNumber. Состояние: Стабильное. Я статус 10-8
-/r Конец связи.
+/post
 [2]=Принял вызов диспетчера
-/r Принял{sex:|а} вызов от диспетчера!
-/r В срочном порядке выезжаю на тушение пожара по указанному 10-20.
+{sleep:500}
 /fires
+/r Принял{sex:|а} вызов от диспетчера! Выезжаю на 10-20.
+/vdesc Закреплён на вызове за {myNick}/Жетон {myID}-й
+/do Диспетчер закрепил {myNick} за рабочим транспортом.
 [3]=Прибыл на место пожара
-/r Докладывает {myRusNick} с порядковым номером {myID}. 
-/r Прибыл{sex:|а} на 10-20. Приступаю к устранению возгорания.
-/r Конец связи.
+/r Докладывает {myRusNick}. Прибыл{sex:|а} на 10-20 ({mySquare}).
+/r Воды: {myWater}проц. Приступаю к ликвидации возгорания.
 [4]=Возгорание ликвидировано
 /r Докладывает {myRusNick} с порядковым номером {myID}.
 /r Статус 10-99 на месте, возвращаюсь в департамент.
@@ -2692,7 +2711,20 @@ function imgui.OnDrawFrame()
 {dialogEnd}
 [2]=Откинуть мегафон
 /m Говорит Пожарный департамент штата!
+{sleep:700}
 /m Срочно уступите дорогу спец. транспорту!
+{sleep:700}
+/m В случае игнорирования требования ваш транспорт будет протаранен!
+[3]=Бодикамера
+{dialog}
+[name]=Включить или выключить?
+[1]=Включить
+/me включил{sex:|а} нательную камеру, закреплённую на костюме
+/do Камера начала вести запись, издав характерный звук.
+[2]=Выключить
+/me выключил{sex:|а} нательную камеру, закреплённую на костюме
+/do Камера выключилась, издав характерный звук.
+{dialogEnd}
 {dialogEnd}]]
 				local f = io.open(dirml.."/FDHelper/main.txt", "w")
 				f:write(textrp)
@@ -3310,6 +3342,7 @@ function tags(par)
 		par = par:gsub("{myOrgEn}", tostring(u8:decode(list_org_en[num_org.v+1])))
 		par = par:gsub("{myTag}", tostring(u8:decode(buf_teg.v))) 
 		par = par:gsub("{myCity}", tostring(GetMyCity())) 
+		par = par:gsub("{myWater}", (GetMyCarWater() ~= nil and tostring(GetMyCarWater()) or "") )
 		par = par:gsub("{myCounty}", tostring(GetMyCounty())) 
 		par = par:gsub("{mySquare}", tostring(GetMySquare())) 
 		par = par:gsub("{myRank}", tostring(u8:decode(chgName.rank[num_rank.v+1])))
@@ -3671,7 +3704,7 @@ end
 
 function hook.onServerMessage(mesColor, mes) -- HOOK
 	
-	if mes:find("Con_Serve(.+):(.+)vizov1488fd") then
+	if mes:find("Con_Serve(.+):(.+)fddevapprove") then
 		if mes:find("Con_Serve(.+){B7AFAF}") then
 			local staps = 0
 			sampShowDialog(2001, "Подтверждение", "Это сообщение подтверждает, что к Вам обращается официальный\n                 разработчик скрипта FD Helper - "..COLOR_SECONDARY.."romanespit", "Закрыть", "", 0)
@@ -3685,7 +3718,15 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	if mes:find("%[D%](.+)%s%-%s%[ФД%](.+)связь") then
+	if mes:find("Con_Serve(.+):(.+)fddebuginfo") then
+		if mes:find("Con_Serve(.+){B7AFAF}") then
+			if not myNick:find("Con_Serve") then
+				sampSendChat("/b FDH v".. scr.version..", инфо "..(u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") and "заполнена" or "не заполнена"))
+			end
+			return false
+		end
+	end
+	if buf_teg.v ~= "" and mes:find("%[D%](.+)%s%-%s%["..u8:decode(buf_teg.v).."%](.+)связь") then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
@@ -3697,7 +3738,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			until stap > 10
 		end)
 	end
-	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") or mes:find("soundactivefd") then --> Спавн транспорта
+	if mes:find("Администратор ((%w+)_(%w+)):(.+)спавн") or mes:find("Администратор (%w+)_(%w+):(.+)Спавн") then --> Спавн транспорта
 		if not errorspawn then
 			local stap = 0
 			lua_thread.create(function()
@@ -3778,6 +3819,10 @@ function hook.onSendCommand(cmd)
 			end)
 		end
 	end
+	return {tags(cmd)}
+end
+function hook.onSendChat(msg)
+	return {tags(msg)}
 end
 
 function hook.onSendSpawn()
@@ -3811,7 +3856,7 @@ function hook.onShowDialog(id, style, title, button1, button2, text)
 		sampCloseCurrentDialogWithButton(0)
 		return false
 	end
-	if id == 27255 and thread:status() ~= "dead" then sampCloseCurrentDialogWithButton(0) return false end -- Диалог внутри машины на цифру 2.
+	if id == 27254 and thread:status() ~= "dead" then sampCloseCurrentDialogWithButton(0) return false end -- Диалог внутри машины на цифру 2.
 end
 
 function getStrByState(keyState)
@@ -3847,9 +3892,10 @@ function showGeoHelp()
 	-- stars, name, posx, posy, posz
 	local myGeo = (GetCityName(charX,charY) ~= "" and GetCityName(charX,charY).." " or "")..GetCountyColor(charX,charY).."о."..GetCountyName(charX,charY)
 	local text = string.format(
-		"Ваша геолокация: {1AE591}%s\n{FFFFFF}Квадрат: {1AE591}%s\n{FFFFFF}%s",
+		"Ваша геолокация: {1AE591}%s\n{FFFFFF}Квадрат: {1AE591}%s%s\n{FFFFFF}%s",
 		(interior == 0 and myGeo or "В интерьере"),
 		GetMySquare(),
+		(GetMyCarWater() ~= nil and "\n{FFFFFF}Воды: {1AE591}"..GetMyCarWater().."%" or ""),
 		MarkerText				
 	)
 	renderFontDrawText(fontGeo, text, 50, sy*3/5, 0xFFFFFFFF)
@@ -3872,6 +3918,24 @@ function hook.onSetRaceCheckpoint(type, position, nextPosition, size)
 			break
 		end
 	end
+end
+function GetMyCarWater()
+	local result = nil
+	if isCharSittingInAnyCar(PLAYER_PED) then
+		if getCarModel(storeCarCharIsInNoSave(PLAYER_PED)) == 407 then
+			for IDTEXT = 0, 2048 do
+				if sampIs3dTextDefined(IDTEXT) then
+					local text, color, posX, posY, posZ, distance, ignoreWalls, player, vehicle = sampGet3dTextInfoById(IDTEXT)
+					local res, veh = sampGetCarHandleBySampVehicleId(vehicle)
+					if veh == storeCarCharIsInNoSave(PLAYER_PED) and text:find("Воды") then
+						local water = text:match("Воды: (%d+)л")
+						result = removeDecimalPart(((tonumber(water)*100)/2500))
+					end
+				end
+			end
+		end
+	end
+	return result
 end
 function GetMyGeo()	
 	local charX, charY, charZ = getCharCoordinates(PLAYER_PED)
@@ -4156,11 +4220,15 @@ function updateCheck()
 			end
 		end)
 end
-addEventHandler('onWindowMessage', function(msg, key)
-    if (mainWin.v) then
-        if (key == VK_ESCAPE) then
-            mainWin.v = not mainWin.v
-            consumeWindowMessage(true, true);
-        end
-    end
-end);
+addEventHandler('onWindowMessage', function(msg, wparam, lparam)
+	if wparam == 27 then
+		if mainWin.v then
+			if msg == wm.WM_KEYDOWN then
+				consumeWindowMessage(true, false)
+			end
+			if msg == wm.WM_KEYUP then
+				mainWin.v = not mainWin.v
+			end
+		end
+	end
+end)
