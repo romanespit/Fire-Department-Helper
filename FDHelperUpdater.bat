@@ -2,7 +2,7 @@
 set /P version= Choose version (1 - with in-game updates, 2 - without in-game updates): 
 md FDHelper
 md lib
-if %version%==2 (curl -L https://raw.githubusercontent.com/romanespit/Fire-Department-Helper/refs/heads/main/FireDeptHelperNoAutoUpdate.lua > FireDeptHelper.lua) else (curl -L https://raw.githubusercontent.com/romanespit/Fire-Department-Helper/refs/heads/main/FireDeptHelper.lua > FireDeptHelper.lua)
+if %version%==2 (curl -L https://raw.githubusercontent.com/romanespit/Fire-Department-Helper/refs/heads/main/FireDeptHelperNoAutoUpdate.lua > FireDeptHelperNoAutoUpdate.lua) else (curl -L https://raw.githubusercontent.com/romanespit/Fire-Department-Helper/refs/heads/main/FireDeptHelper.lua > FireDeptHelper.lua)
 cd FDHelper
 md files
 cd files
