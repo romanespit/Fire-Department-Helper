@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.2")
+script_version("1.3.3")
 script_properties("work-in-pause")
 setver = 1
  
@@ -523,11 +523,11 @@ local helpd = {}
 helpd.exp = imgui.ImBuffer(256)
 helpd.exp.v =  u8[[
 {dialog}
-[name]=Выдача мед.карты
-[1]=Полностью здоровый
+[name]=Название диалога
+[1]=Вариант 1
 Отыгровка №1
 Отыгровка №2
-[2]=Имеются отклонения 
+[2]=Вариант 2 
 Отыгровка №1
 Отыгровка №2
 {dialogEnd}
@@ -657,6 +657,8 @@ local FireList = {
 	{stars = 1, name = "Пожар в магазинах Лос Сантоса", posx = 997.81427001953, posy = -1300.5013427734, posz = 13.449513435364},
 	{stars = 1, name = "Крушение бизнес джета в аэропорту Сан Фиерро", posx = -1283.4968261719, posy = 129.17262268066, posz = 13.603804588318},
 	{stars = 1, name = "Возгорание церкви в Лас Вентурасе", posx = 2529.5080566406, posy = 2023.5382080078, posz = 10.674548149109},
+	{stars = 1, name = "Церковь в паломино крик", posx = 2256.8627929688, posy = -50.449131011963, posz = 25.534505844116},
+	{stars = 1, name = "Магазины в Лос Сантосе", posx = 499.83618164063, posy = -1403.5599365234, posz = 16.149856567383},
 	{stars = 2, name = "Пожар на заводе в Монтгомери", posx = 1324.8366699219, posy = 274.08764648438, posz = 20.182767868042},
 	{stars = 2, name = "Пожар в ангаре Лас Вентураса", posx = 1723.4230957031, posy = 750.02355957031, posz = 11.337490081787},
 	{stars = 2, name = "Возгорание амбара на ферме", posx = -96.602340698242, posy = -40.57186126709, posz = 3.1035149097443},
@@ -665,6 +667,7 @@ local FireList = {
 	{stars = 3, name = "Возгорание отделения полиции ЛС	", posx = 1554.5328369141, posy = -1679.3986816406, posz = 15.995138168335},
 	{stars = 3, name = "Пожар на заброшенной ферме	", posx = -1440.6533203125, posy = -1526.1088867188, posz = 101.05674743652},
 	{stars = 3, name = "Большой пожар на стройке в Лас Вентурасе", posx = 2408.8427734375, posy = 1922.2979736328, posz = 12.096800804138},
+	{stars = 3, name = "Нефтебаза Лас Вентурас", posx = 225.40878295898, posy = 1405.1715087891, posz = 11.378417015076},
 	{stars = 3, name = "Пожар на складе в деревне Блюббери", posx = 95.613800048828, posy = -295.01791381836, posz = 1.9787720441818}
 }
 -- Areas
@@ -840,23 +843,6 @@ rkeys.isBlockedHotKey = function(keys)
 	end
 	return bool, hkId
 end
-
--- rkeys.blockNextHotKey = function(keys)
--- 	local bool = false
--- 	if not rkeys.isBlockedHotKey(keys) then
--- 	   tBlockNext[#tBlockNext + 1] = keys
--- 	   bool = true
--- 	end
--- 	return bool
--- end
- 
-
-
--- for i,v in ipairs(BlockKeys) do
--- 	rkeys.blockNextHotKey({v})
--- end
-
-
 
 function rkeys.isHotKeyExist(keys)
 local bool = false
@@ -1336,7 +1322,7 @@ function main()
   while true do
 	wait(0)
 		if sampIsChatInputActive() and buf_dreplace.v then
-			if sampGetChatInputText() == "/d " or sampGetChatInputText() == ".в " then sampSetChatInputText("/d ["..u8:decode(buf_dteg.v).."] - []:") end
+			if sampGetChatInputText() == "/d " or sampGetChatInputText() == ".в " then sampSetChatInputText("/d ["..u8:decode(buf_dteg.v).."] - []: ") end
 		end
 		if postCP ~= nil then
 			local x, y, z = getCharCoordinates(PLAYER_PED)
@@ -1382,7 +1368,6 @@ function main()
 	end
 	if cb_hud.v then showGeoHelp() end
 	if cb_hudTime.v and not isPauseMenuActive() then hudTimeF() end
-	--if hudPing and not isPauseMenuActive() then pingGraphic(sx/9*8-20, sy/4) end
 		imgui.Process = mainWin.v or iconwin.v
   end
 end
@@ -1969,50 +1954,7 @@ function imgui.OnDrawFrame()
 							imgui.PushItemWidth(150)
 							imgui.InputText(u8"Название бинда", binder.name, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[%wа-Я%+%№%#%(%)]"))
 							
-							--[[imgui.TextColoredRGB("Текущая команда: /")
-							imgui.SameLine()
-							imgui.InputText(u8"##cmd", binder.cmd, imgui.InputTextFlags.CallbackCharFilter, filter(1, "[%wа-Я%+%№%#%(%)]"))
-							---
-							if isHotKeyDefined then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{FF0000}Данная команда уже существует!")
-							end
-							if russkieBukviNahyi then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{FF0000}Нельзя использовать русские буквы!")
-							end
-							if dlinaStroki then
-								imgui.SameLine()
-								imgui.TextColoredRGB("{FF0000}Максимальная длина команды - 15 букв!")
-							end		
-							if binder.cmd.v:find("%A") then
-								russkieBukviNahyi = true
-								isHotKeyDefined = false
-								dlinaStroki = false
-								exits = true
-							elseif binder.cmd.v:len() > 15 then
-								dlinaStroki = true
-								russkieBukviNahyi = false
-								isHotKeyDefined = false
-								exits = true
-							end
-							for i,v in ipairs(cmdBind) do
-								if v.cmd == binder.cmd.v then
-									exits = true
-									isHotKeyDefined = true
-									russkieBukviNahyi = false
-									dlinaStroki = false
-								end
-							end
-							for i,v in ipairs(binder.list) do
-								if binder.list[i].cmd == binder.cmd.v and binder.cmd.v ~= binder.cmd.v and binder.cmd.v ~= "" then
-									exits = true
-									isHotKeyDefined = true
-									russkieBukviNahyi = false
-									dlinaStroki = false
-								end
-							end
-							---]]
+							
 							if imgui.Button(u8"Задать команду", imgui.ImVec2(150, 20)) then 
 								chgName.inp.v = binder.cmd.v
 								unregcmd = chgName.inp.v
@@ -2262,7 +2204,7 @@ function imgui.OnDrawFrame()
 							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
 						
 					imgui.Bullet()
-					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Консерва с 07)")
+					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Con Serve с 07)")
 					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
 					if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru") end
 					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://romanespit.ru', nil, nil, 1)) end
@@ -3426,7 +3368,7 @@ function funCMD.post()
 		sampSetDialogClientside(false)
 	elseif bool then
 		thread = lua_thread.create(function()
-			if not u8:decode(buf_teg.v) then sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
+			if u8:decode(buf_teg.v) == "" or not u8:decode(buf_teg.v) then sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_nick.v), post))
 			else sampSendChat(string.format("/r Докладывает %s. %s. Статус: Стабильно", u8:decode(buf_teg.v), post)) end
 			if tonumber(post:match("%d+")) >= 3 and tonumber(post:match("%d+")) <= 5 then
 				local veh = getAllVehicles()
@@ -3889,7 +3831,6 @@ function showGeoHelp()
 			(interior == 0 and removeDecimalPart(distance) or "?")
 		)
 	end
-	-- stars, name, posx, posy, posz
 	local myGeo = (GetCityName(charX,charY) ~= "" and GetCityName(charX,charY).." " or "")..GetCountyColor(charX,charY).."о."..GetCountyName(charX,charY)
 	local text = string.format(
 		"Ваша геолокация: {1AE591}%s\n{FFFFFF}Квадрат: {1AE591}%s%s\n{FFFFFF}%s",
@@ -3961,10 +3902,6 @@ function GetSquareName(posx,posy)
 	local result = ""
 	local alphabet ={ "А","Б","В","Г","Д","Ж","З","И","К","Л","М","Н","О","П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Я"}
 	for i,v in ipairs(alphabet) do
-		-- (i-1)*250 - minx
-		-- i*250 - maxx
-		-- (k-1)*250 - miny
-		-- k*250 - maxy
 		for k=1,24 do
 			if posx+3000 >= (i-1)*250 and posx+3000 <= i*250 and posy+3000 >= (k-1)*250 and posy+3000 <= k*250 then
 				result = alphabet[25-k].."-"..i
@@ -4003,8 +3940,6 @@ function GetCountyColor(posx,posy)
 	end
 	return tostring(result)
 end
--- CitiesName { name="г. Лас Вентурас", minx=878.99609375, miny=607, maxx=3000.01171875, maxy=3000 },
--- CountyName { name="Whetstone", color="{FF007F}", minx=-1768.7374877929688, miny=-1674.9748992919922, maxx=-1688.7374877929688, maxy=-1557.9748992919922 }
 function hook.onDisableRaceCheckpoint()
 	if isMarkerOnFire ~= nil then isMarkerOnFire = nil end
 	MarkerInfo.exists = false
