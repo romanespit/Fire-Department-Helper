@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.3")
+script_version("1.3.4")
 script_properties("work-in-pause")
 setver = 1
  
@@ -665,6 +665,7 @@ local FireList = {
 	{stars = 2, name = "Возгорание жилого дома в ЛС	", posx = 2353.8603515625, posy = -1790.7845458984, posz = 13.433568000793},
 	{stars = 2, name = "Возгорание овощебазы около Паломино Крик", posx = 1934.2730712891, posy = 176.41770935059, posz = 35.873531341553},
 	{stars = 2, name = "Склад в Лас Вентурасе", posx = 1099.6976318359, posy = 1896.2349853516, posz = 10.530275344849},
+	{stars = 2, name = "Пирс Санта Мария", posx = 379.24740600586, posy = -2053.7197265625, posz = 7.9718179702759},
 	{stars = 3, name = "Возгорание отделения полиции ЛС	", posx = 1554.5328369141, posy = -1679.3986816406, posz = 15.995138168335},
 	{stars = 3, name = "Пожар на заброшенной ферме	", posx = -1440.6533203125, posy = -1526.1088867188, posz = 101.05674743652},
 	{stars = 3, name = "Большой пожар на стройке в Лас Вентурасе", posx = 2408.8427734375, posy = 1922.2979736328, posz = 12.096800804138},
@@ -3667,7 +3668,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 			return false
 		end
 	end
-	if buf_teg.v ~= "" and mes:find("%[D%](.+)%s%-%s%["..u8:decode(buf_teg.v).."%](.+)связь") then
+	if buf_teg.v ~= "" and mes:find("%[D%](.+)%s%-%s%["..u8:decode(buf_dteg.v).."%](.+)связь") then
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
@@ -3710,7 +3711,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 		or mes:find("Продавай и покупай автомобильные номера и (.+) в Лас Вентурасе!") or mes:find("Центр обмена имущество:")
 		or mes:find("Проводи безопасный обмен имуществом с другими игроками в специальном центре обмена имуществом") or mes:find("/GPS %- Разное %- Центр обмена имуществом")
 		or mes:find('Игроки со статусом (.+)имеют большие возможности') or mes:find("Вы можете улучшить свои характеристики на поле битвы, купив списанный полицейский бронежилет")
-		or mes:find("Списанный бронежилет на 4 часа даст вашему персонажу") or mes:find("Найти склад можно с помощью /GPS")
+		or mes:find("Списанный бронежилет на 4 часа даст вашему персонажу") or mes:find("Найти склад можно с помощью /GPS") or mes == "Центр обмена имуществом:"
 		or mes == "" or mes == " "
 		then 
 			return false
