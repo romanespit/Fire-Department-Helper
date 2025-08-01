@@ -1,7 +1,7 @@
 script_name("FireDeptHelper")
 script_authors("romanespit")
 script_description("Script for Fire Department.")
-script_version("1.3.4")
+script_version("1.3.5")
 script_properties("work-in-pause")
 setver = 1
  
@@ -20,6 +20,10 @@ local COLOR_SECONDARY = "{1AE591}"
 local COLOR_WHITE = "{FFFFFF}"
 local SCRIPT_PREFIX = COLOR_WHITE.."["..COLOR_MAIN.."FDHelper"..COLOR_WHITE.."]: "
 local spawnCars = false
+EDBG = ":u1f6e0:"
+EERR = ":no_entry:"
+EOK = ":true:"
+EINFO = ":question:"
  
 local sampfuncsNot = [[
  Не обнаружен файл SAMPFUNCS.asi в папке игры, вследствие чего
@@ -1311,12 +1315,12 @@ function main()
 		_, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
 		myNick = sampGetPlayerNickname(myid)
 		
-		sampAddChatMessage(string.format(SCRIPT_PREFIX.."Приветствую, %s. Скрипт успешно загружен. Версия скрипта: %s", sampGetPlayerNickname(myid):gsub("_"," "),scr.version), SCRIPT_COLOR)
-		sampAddChatMessage(SCRIPT_PREFIX.."Команды: Главное меню - "..COLOR_SECONDARY.."/fd"..COLOR_WHITE..". Главная отыгровка - "..COLOR_SECONDARY.."кнопка O (англ)", SCRIPT_COLOR)
+		sampAddChatMessage(string.format(SCRIPT_PREFIX..EOK.."Приветствую, %s. Скрипт успешно загружен. Версия скрипта: %s", sampGetPlayerNickname(myid):gsub("_"," "),scr.version), SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EDBG.."Команды: Главное меню - "..COLOR_SECONDARY.."/fd"..COLOR_WHITE..". Главная отыгровка - "..COLOR_SECONDARY.."кнопка O (англ)", SCRIPT_COLOR)
 		wait(200)
 		if buf_nick.v == "" then 
-			sampAddChatMessage(SCRIPT_PREFIX.."Похоже у тебя не настроена основная информация. ", SCRIPT_COLOR)
-			sampAddChatMessage(SCRIPT_PREFIX.."Зайди в главном меню в раздел \"Настройки\" и настрой себе всё по \"фэн-шую\".", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EERR.."Похоже у тебя не настроена основная информация. ", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EERR.."Зайди в главном меню в раздел \"Настройки\" и настрой себе всё по \"фэн-шую\".", SCRIPT_COLOR)
 		end
   while true do
 	wait(0)
@@ -1690,7 +1694,7 @@ function imgui.OnDrawFrame()
 				f:write(encodeJson(setting))
 				f:flush()
 				f:close()
-				sampAddChatMessage(SCRIPT_PREFIX.."Настройки сохранены.", SCRIPT_COLOR)
+				sampAddChatMessage(SCRIPT_PREFIX..EOK.."Настройки сохранены.", SCRIPT_COLOR)
 				needSave = false
 			end
 			imgui.PopStyleColor(1)
@@ -1905,7 +1909,15 @@ function imgui.OnDrawFrame()
 									binder.select_bind = i;
 									
 									binder.name.v = u8(binder.list[binder.select_bind].name)
-									binder.sleep.v = binder.list[binder.select_bind].sleep
+									--binder.sleep.v = binder.list[binder.select_bind].sleep
+									local sleep_value = binder.list[binder.select_bind].sleep
+									if type(sleep_value) == "string" then
+										binder.sleep.v = tonumber(sleep_value) or 0.5
+									elseif type(sleep_value) == "number" then
+										binder.sleep.v = sleep_value
+									else
+										binder.sleep.v = 0.5
+									end
 									binder.key = binder.list[binder.select_bind].key
 									binder.cmd.v = (binder.list[binder.select_bind].cmd ~= nil and u8(binder.list[binder.select_bind].cmd) or "")
 									if doesFileExist(dirml.."/FDHelper/Binder/bind-"..binder.list[binder.select_bind].name..".txt") then
@@ -2198,29 +2210,25 @@ function imgui.OnDrawFrame()
 						imgui.Text(fa.ICON_LINK)
 						imgui.SameLine()
 						imgui.TextColoredRGB("Актуальная версия - на {74BAF4}GitHub")
-							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") end
-							if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/romanespit/Fire-Department-Helper/releases/latest', nil, nil, 1)) end
+							if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать")  end
+							if imgui.IsItemClicked(0) then setClipboardText("https://github.com/romanespit/Fire-Department-Helper/releases/latest") sampAddChatMessage(SCRIPT_PREFIX..EOK.."Ссылка скопирована в буфер обмена: https://github.com/romanespit/Fire-Department-Helper/releases/latest", SCRIPT_COLOR) end
 						
 					imgui.Bullet()
 					imgui.TextColoredRGB("Разработчик - {74BAF4}romanespit (Con Serve с 07)")
-					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-					if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru") end
-					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://romanespit.ru', nil, nil, 1)) end
+					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать")  end
+					if imgui.IsItemClicked(0) then setClipboardText("https://romanespit.ru/lua") sampAddChatMessage(SCRIPT_PREFIX..EOK.."Ссылка скопирована в буфер обмена: https://romanespit.ru/lua", SCRIPT_COLOR) end
 					imgui.Bullet()
 					imgui.TextColoredRGB("Основа {74BAF4}MedicalHelper by Kevin Hatiko")
-					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-					if imgui.IsItemClicked(0) then setClipboardText("https://github.com/TheMrThor/MedicalHelper") end
-					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://github.com/TheMrThor/MedicalHelper', nil, nil, 1)) end	
+					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать")  end
+					if imgui.IsItemClicked(0) then setClipboardText("https://github.com/TheMrThor/MedicalHelper") sampAddChatMessage(SCRIPT_PREFIX..EOK.."Ссылка скопирована в буфер обмена: https://github.com/TheMrThor/MedicalHelper", SCRIPT_COLOR) end
 					imgui.Bullet()
 					imgui.TextColoredRGB("Фиксил MedicalHelper {FFB700}сырный Alexandr_Morenzo c 07")
 					imgui.Bullet()
 					imgui.Text(fa.ICON_HEART)
 					imgui.SameLine()
 					imgui.TextColoredRGB(" {ad59ff}First Club")
-					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать, или ПКМ, чтобы открыть в браузере")  end
-					if imgui.IsItemClicked(0) then setClipboardText("https://discord.com/invite/first-family") end
-					if imgui.IsItemClicked(1) then print(shell32.ShellExecuteA(nil, 'open', 'https://discord.com/invite/first-family', nil, nil, 1)) end
+					if imgui.IsItemHovered() then imgui.SetTooltip(u8"Клик ЛКМ, чтобы скопировать")  end
+					if imgui.IsItemClicked(0) then setClipboardText("https://discord.com/invite/first-family") sampAddChatMessage(SCRIPT_PREFIX..EOK.."Ссылка скопирована в буфер обмена: https://discord.com/invite/first-family", SCRIPT_COLOR) end
 					imgui.SameLine()
 					imgui.TextColoredRGB(" в сердечке")
 					imgui.TextColoredRGB("Тексты, выделенные {74BAF4}таким цветом {FFFFFF}кликабельны и ведут на соответствующие ресурсы")
@@ -2920,7 +2928,7 @@ function onHotKeyCMD(id, keys)
 			end
 		end
 	else
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 	end
 end
 
@@ -3072,9 +3080,9 @@ end
 function playBind(tb)
 	if not tb.debug.file or #tb.debug.close > 0 then
 		if not tb.debug.file then
-			sampAddChatMessage(SCRIPT_PREFIX.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EERR.."Файл с текстом бинда не обнаружен. ", SCRIPT_COLOR)
 		elseif #tb.debug.close > 0 then
-			sampAddChatMessage(SCRIPT_PREFIX.."Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EERR.."Диалог, начало которого является строка №"..tb.debug.close[#tb.debug.close]..", не закрыт тегом {dialogEnd}", SCRIPT_COLOR)
 		end
 		addOneOffSound(0, 0, 0, 1058)
 		return false
@@ -3293,7 +3301,7 @@ function tags(par)
 				if sampIsPlayerConnected(id) then
 					par = par:gsub(v, tostring(sampGetPlayerNickname(id))):gsub("_", " ")
 				else
-					sampAddChatMessage(SCRIPT_PREFIX.."Параметр {getNickByID:ID} не смог вернуть ник игрока. Возможно игрок не в сети.", SCRIPT_COLOR)
+					sampAddChatMessage(SCRIPT_PREFIX..EERR.."Параметр {getNickByID:ID} не смог вернуть ник игрока. Возможно игрок не в сети.", SCRIPT_COLOR)
 					par = par:gsub(v,"")
 				end
 			end
@@ -3313,7 +3321,7 @@ function tags(par)
 			if targID ~= nil and targID >= 0 and targID <= 1000 and sampIsPlayerConnected(targID) then
 				par = par:gsub("{getNickByTarget}", tostring(sampGetPlayerNickname(targID):gsub("_", " ")))
 			else
-				sampAddChatMessage(SCRIPT_PREFIX.."Параметр {getNickByTarget} не смог вернуть ник игрока. Возможно Вы не целились на игрока, либо он не в сети.", SCRIPT_COLOR)
+				sampAddChatMessage(SCRIPT_PREFIX..EERR.."Параметр {getNickByTarget} не смог вернуть ник игрока. Возможно Вы не целились на игрока, либо он не в сети.", SCRIPT_COLOR)
 				par = par:gsub("{getNickByTarget}", tostring(""))
 			end
 		end
@@ -3324,11 +3332,11 @@ end
 funCMD = {} 
 function funCMD.main()
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if not u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") then
-		sampAddChatMessage(SCRIPT_PREFIX.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
 		return
 	end
 	thread = lua_thread.create(function()
@@ -3345,7 +3353,7 @@ function funCMD.debug()
 end
 function funCMD.post()
 	if not u8:decode(buf_nick.v):find("[а-яА-Я]+%s[а-яА-Я]+") then
-		sampAddChatMessage(SCRIPT_PREFIX.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Сначала нужно заполнить базовую информацию. "..COLOR_MAIN.."/fd > Настройки > Основная информация", SCRIPT_COLOR)
 		return
 	end
 	local bool, post, coord = postGet()
@@ -3379,11 +3387,11 @@ function funCMD.post()
 end
 function funCMD.warn(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%X+)") then
@@ -3400,16 +3408,16 @@ function funCMD.warn(text)
 			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/+warn [id игрока] [причина].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/+warn [id игрока] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.uwarn(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
@@ -3423,16 +3431,16 @@ function funCMD.uwarn(id)
 			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/-warn [id игрока].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/-warn [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.fracrp(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 6 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
@@ -3446,16 +3454,16 @@ function funCMD.fracrp(id)
 				sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 			end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/fracrp [id игрока].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/fracrp [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.inv(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
@@ -3472,23 +3480,23 @@ function funCMD.inv(id)
 					-- Отыгровку в рацию убрал ввиду новой системы предложений на аризонке
 			end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/inv [id игрока].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/inv [id игрока].", SCRIPT_COLOR)
 		end
 end
 local spThread = lua_thread.create(function() return end)
 function funCMD.spawncars(time)
 	if spThread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент уже запущен спавн транспорта. Ожидайте спавна.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент уже запущен спавн транспорта. Ожидайте спавна.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 	if time:find("(%d+)") then
 		local timer = text:match("(%d+)")
 		if timer < 20 or timer > 90 then
-			sampAddChatMessage(SCRIPT_PREFIX.."Таймер может быть от 20 до 90 секунд", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EERR.."Таймер может быть от 20 до 90 секунд", SCRIPT_COLOR)
 			return
 		end
 		spThread = lua_thread.create(function()
@@ -3501,7 +3509,7 @@ function funCMD.spawncars(time)
 	else
 		spThread = lua_thread.create(function()
 			sampSendChat("/rb Спавн спец. транспорта через 30 секунд")
-			sampAddChatMessage(SCRIPT_PREFIX.."Вы можете использовать задержку в секундах: "..COLOR_SECONDARY.."/fspcars [20-90]", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Вы можете использовать задержку в секундах: "..COLOR_SECONDARY.."/fspcars [20-90]", SCRIPT_COLOR)
 			wait(29000)
 			spawnCars = true
 			wait(1000)
@@ -3511,11 +3519,11 @@ function funCMD.spawncars(time)
 end
 function funCMD.unv(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%X+)") then
@@ -3532,16 +3540,16 @@ function funCMD.unv(text)
 				sampSendChat("/r Сотрудник с личным делом №"..id.." был уволен по причине: "..reac)
 			end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/unv [id игрока] [причина].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/unv [id игрока] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.mute(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s(%d+)%s(%X+)") then
@@ -3562,16 +3570,16 @@ function funCMD.mute(text)
 					sampSendChat("/me повесил".. chsex("", "а") .." рацию на пояс")
 			end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/+mute [id игрока] [время в минутах] [причина].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/+mute [id игрока] [время в минутах] [причина].", SCRIPT_COLOR)
 		end
 end
 function funCMD.umute(id)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 8 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if id:find("(%d+)") then
@@ -3589,16 +3597,16 @@ function funCMD.umute(id)
 					sampSendChat("/me повесил".. chsex("", "а") .." рацию на пояс")
 			end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/-mute [id игрока].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/-mute [id игрока].", SCRIPT_COLOR)
 		end
 end
 function funCMD.rank(text)
 	if thread:status() ~= "dead" then 
-		sampAddChatMessage(SCRIPT_PREFIX.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."В данный момент проигрывается отыгровка.", SCRIPT_COLOR)
 		return 
 	end
 	if num_rank.v+1 < 9 then
-		sampAddChatMessage(SCRIPT_PREFIX.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EERR.."Данная команда Вам недоступна. Поменяйте должность в настройках скрипта, если это требуется.", SCRIPT_COLOR)
 		return
 	end
 		if text:find("(%d+)%s([1-9])") then
@@ -3618,7 +3626,7 @@ function funCMD.rank(text)
 			sampSendChat("/me выш".. chsex("ел", "ла") .." из базы и убрал".. chsex("", "а") .." телефон в карман")
 		end)
 		else
-		sampAddChatMessage(SCRIPT_PREFIX.."Использование: "..COLOR_SECONDARY.."/gr [id игрока] [номер ранга].", SCRIPT_COLOR)
+		sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Использование: "..COLOR_SECONDARY.."/gr [id игрока] [номер ранга].", SCRIPT_COLOR)
 		end
 end
 function funCMD.memb()
@@ -3643,7 +3651,7 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 		if mes:find("Con_Serve(.+){B7AFAF}") then
 			local staps = 0
 			sampShowDialog(2001, "Подтверждение", "Это сообщение подтверждает, что к Вам обращается официальный\n                 разработчик скрипта FD Helper - "..COLOR_SECONDARY.."romanespit", "Закрыть", "", 0)
-			sampAddChatMessage(SCRIPT_PREFIX.."Это сообщение подтверждает, что к Вам обращается разрабочик FD Helper - "..COLOR_SECONDARY.."romanespit", 0xFF8FA2)
+			sampAddChatMessage(SCRIPT_PREFIX..EOK.."Это сообщение подтверждает, что к Вам обращается разрабочик FD Helper - "..COLOR_SECONDARY.."romanespit", 0xFF8FA2)
 			lua_thread.create(function()
 				repeat wait(200)
 					addOneOffSound(0, 0, 0, 1057)
@@ -3665,8 +3673,8 @@ function hook.onServerMessage(mesColor, mes) -- HOOK
 		local stap = 0
 		lua_thread.create(function()
 			wait(300)
-			sampAddChatMessage(SCRIPT_PREFIX.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
-			sampAddChatMessage(SCRIPT_PREFIX.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
+			sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
+			sampAddChatMessage(SCRIPT_PREFIX..EINFO.."Вашу организацию вызывают в рации департамента!", 0xFF8FA2)
 			repeat wait(200) 
 				addOneOffSound(0, 0, 0, 1057)
 				stap = stap + 1
@@ -3778,8 +3786,8 @@ function hook.onSendDialogResponse(id, but, list)
 			postCPcoords.x, postCPcoords.y, postCPcoords.z = coord[list+1].x,coord[list+1].y,coord[list+1].z
 			postCP = createCheckpoint(1, coord[list+1].x, coord[list+1].y, coord[list+1].z, nil, nil, nil, 2)
 			addOneOffSound(0, 0, 0, 1058)
-			sampAddChatMessage(SCRIPT_PREFIX.."Была выставлена метка поста №"..list+1, SCRIPT_COLOR)
-			sampAddChatMessage(SCRIPT_PREFIX.."Все посты находятся внутри пожарного департамента", SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EOK.."Была выставлена метка поста №"..list+1, SCRIPT_COLOR)
+			sampAddChatMessage(SCRIPT_PREFIX..EOK.."Все посты находятся внутри пожарного департамента", SCRIPT_COLOR)
 		elseif but == 0 then
 		end
 	end
@@ -4099,8 +4107,6 @@ function postGet(sel)
 		end
 	return false, postname, coord
 end
-
-
 
 addEventHandler('onWindowMessage', function(msg, wparam, lparam)
 	if wparam == 27 then
